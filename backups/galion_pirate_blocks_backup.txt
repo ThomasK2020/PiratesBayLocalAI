@@ -1,0 +1,570 @@
+=== BLOC 1 : GLSL SHADER - MODÈLE SDF DU GALION PIRATE ===
+        // =========================================================================
+        // MODÈLE DU GALION PIRATE DÉTAILLÉ (SDF MULTI-ÉLÉMENTS)
+        // =========================================================================
+        float sdBox(vec3 p, vec3 b) {
+            vec3 q = abs(p) - b;
+            return length(max(q, 0.0)) + min(max(q.x, max(q.y, q.z)), 0.0);
+        }
+
+        float sdCappedCylinder(vec3 p, float h, float r) {
+            vec2 d = abs(vec2(length(p.xz), p.y)) - vec2(r, h);
+            return min(max(d.x, d.y), 0.0) + length(max(d, 0.0));
+        }
+
+        float sdSegment(vec3 p, vec3 a, vec3 b, float r) {
+            vec3 pa = p - a, ba = b - a;
+            float h = clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0);
+            return length(pa - ba * h) - r;
+        }
+
+        // Espace local du bateau :
+        // z = axe proue(+) / poupe(-)
+        // x = bâbord(-) / tribord(+)
+        // y = vertical
+        vec3 worldToShip(vec3 p) {
+            vec3 q = p - u_ship_pos;
+            q.xz *= rot2D(-u_ship_rot.x); // Yaw
+            q.yz *= rot2D(-u_ship_rot.y); // Pitch
+            q.xy *= rot2D(-u_ship_rot.z); // Roll
+            return q;
+        }
+
+        // Bounding box du navire pour optimisation
+        bool shipBoundingTest(vec3 ro, vec3 rd, out float tNear, out float tFar) {
+            vec3 boxMin = u_ship_pos - vec3(6.5, 3.5, 6.5);
+            vec3 boxMax = u_ship_pos + vec3(6.5, 8.5, 6.5);
+
+            vec3 invD = 1.0 / rd;
+            vec3 t0 = (boxMin - ro) * invD;
+            vec3 t1 = (boxMax - ro) * invD;
+            vec3 tSmall = min(t0, t1);
+            vec3 tBig = max(t0, t1);
+
+            tNear = max(max(tSmall.x, tSmall.y), tSmall.z);
+            tFar = min(min(tBig.x, tBig.y), tBig.z);
+
+            return (tFar >= max(tNear, 0.0));
+        }
+
+        // Matériaux du navire :
+        // 1: Coque en bois de chêne vieilli / pont
+        // 2: Ornements dorés de poupe et vitraux
+        // 3: Voiles blanches bombées par le vent
+        // 4: Mâts, vergues et beaupré (bois sombre)
+        // 5: Pavillon pirate noir (Jolly Roger)
+        // 6: Lanterne de poupe (lumière ambrée)
+        // 7: Canons en bronze / fer forgé
+        float map_ship_detail(vec3 q, out int matId) {
+            matId = 1;
+            float dMin = 1e5;
+
+            // 1. COQUE DU GALION
+            // Forme hydrodynamique effilée à l'avant, large au centre, château surélevé à l'arrière
+            float zRel = q.z / 3.8;
+            float bowTaper = smoothstep(0.0, 1.0, clamp(zRel, 0.0, 1.0));
+            float sternTaper = smoothstep(0.0, 1.0, clamp(-zRel, 0.0, 1.0));
+            
+            float halfWidth = mix(1.25, 0.15, bowTaper) * mix(1.0, 0.85, sternTaper);
+            float flare = 1.0 + (q.y + 0.5) * 0.28;
+            halfWidth *= flare;
+
+            // Hauteur du pont : s'élève à la proue (+0.4) et au château arrière (+0.85)
+            float sheerLine = mix(0.65, 1.10, bowTaper * bowTaper) + mix(0.0, 0.85, sternTaper * sternTaper);
+            
+            // Coque extérieure
+            float dHullX = abs(q.x) - halfWidth;
+            float dHullY = max(q.y - sheerLine, -q.y - 0.95);
+            float dHullZ = abs(q.z) - 3.8;
+            float dHullOuter = max(dHullX, max(dHullY, dHullZ));
+
+            // Arrondi de la carène
+            float dKeelCurve = length(vec2(max(abs(q.x) - halfWidth * 0.45, 0.0), q.y + 0.7)) - 0.55;
+            dHullOuter = max(dHullOuter, dKeelCurve);
+
+            // Château arrière (cabine du capitaine)
+            vec3 qCabin = q - vec3(0.0, 0.95, -2.5);
+            float dCabin = sdBox(qCabin, vec3(0.95 * flare, 0.65, 1.15));
+            dHullOuter = min(dHullOuter, dCabin);
+
+            // Quille inférieure
+            float dKeel = sdBox(q - vec3(0.0, -1.0, 0.0), vec3(0.08, 0.25, 3.7));
+            dHullOuter = min(dHullOuter, dKeel);
+
+            // Évidement du pont supérieur
+            vec3 qDeck = q - vec3(0.0, sheerLine + 0.1, 0.0);
+            float dDeckCut = sdBox(qDeck, vec3(halfWidth - 0.12, 0.35, 3.65));
+            float dHull = max(dHullOuter, -dDeckCut);
+
+            if (dHull < dMin) {
+                dMin = dHull;
+                matId = 1; // Bois de la coque
+            }
+
+            // 2. ORNEMENTS ET FENÊTRES DE POUPE
+            vec3 qTransom = q - vec3(0.0, 1.05, -3.66);
+            float dTransom = sdBox(qTransom, vec3(0.85, 0.45, 0.05));
+            if (dTransom < dMin) {
+                dMin = dTransom;
+                matId = 2; // Ornements dorés
+            }
+
+            // 3. MÂTS, VERGUES ET BEAUPRÉ
+            // Grand mât (central)
+            float dMainMast = sdCappedCylinder(q - vec3(0.0, 3.1, 0.0), 3.4, 0.09);
+            // Mât de misaine (avant)
+            float dForeMast = sdCappedCylinder(q - vec3(0.0, 2.7, 1.9), 2.9, 0.08);
+            // Mât d'artimon (arrière)
+            float dMizzenMast = sdCappedCylinder(q - vec3(0.0, 2.8, -1.8), 2.5, 0.07);
+            // Beaupré (pointant vers l'avant à 28°)
+            vec3 qBowsprit = q - vec3(0.0, 0.8, 3.6);
+            qBowsprit.yz *= rot2D(-0.48);
+            float dBowsprit = sdCappedCylinder(qBowsprit - vec3(0.0, 1.3, 0.0), 1.4, 0.065);
+
+            float dMasts = min(min(dMainMast, dForeMast), min(dMizzenMast, dBowsprit));
+
+            // Vergues horizontales (traverses supportant les voiles)
+            // Grand mât : 3 vergues
+            float dYardM1 = sdCappedCylinder((q - vec3(0.0, 2.0, 0.0)).yxz, 0.045, 1.75);
+            float dYardM2 = sdCappedCylinder((q - vec3(0.0, 3.8, 0.0)).yxz, 0.04, 1.35);
+            float dYardM3 = sdCappedCylinder((q - vec3(0.0, 5.4, 0.0)).yxz, 0.035, 0.95);
+            // Misaine : 2 vergues
+            float dYardF1 = sdCappedCylinder((q - vec3(0.0, 1.8, 1.9)).yxz, 0.045, 1.45);
+            float dYardF2 = sdCappedCylinder((q - vec3(0.0, 3.4, 1.9)).yxz, 0.038, 1.05);
+            // Artimon : 2 vergues
+            float dYardZ1 = sdCappedCylinder((q - vec3(0.0, 2.2, -1.8)).yxz, 0.04, 1.15);
+            float dYardZ2 = sdCappedCylinder((q - vec3(0.0, 3.7, -1.8)).yxz, 0.035, 0.85);
+
+            float dYards = min(min(min(dYardM1, dYardM2), min(dYardM3, dYardF1)), min(min(dYardF2, dYardZ1), dYardZ2));
+            float dWoodRigging = min(dMasts, dYards);
+
+            // Hunes (plateformes d'observation / nids de corbeau)
+            float dHune1 = sdCappedCylinder(q - vec3(0.0, 3.65, 0.0), 0.10, 0.28) - 0.02;
+            float dHune2 = sdCappedCylinder(q - vec3(0.0, 3.25, 1.9), 0.09, 0.24) - 0.02;
+            dWoodRigging = min(dWoodRigging, min(dHune1, dHune2));
+
+            if (dWoodRigging < dMin) {
+                dMin = dWoodRigging;
+                matId = 4; // Bois sombre mâts/vergues
+            }
+
+            // 4. VOILES CARRÉES BOMBÉES PAR LE VENT
+            // Les voiles sont courbées par la brise tropicale
+            float windBillow = 0.26;
+            
+            // Voile Grand Mât Inférieure
+            vec3 qSM1 = q - vec3(0.0, 2.9, 0.0);
+            float curveM1 = (1.0 - (qSM1.y / 0.85) * (qSM1.y / 0.85)) * (1.0 - (qSM1.x / 1.65) * (qSM1.x / 1.65)) * windBillow;
+            float dSailM1 = max(sdBox(qSM1 - vec3(0.0, 0.0, curveM1), vec3(1.65, 0.82, 0.025)), -qSM1.y - 0.85);
+
+            // Voile Grand Mât Supérieure
+            vec3 qSM2 = q - vec3(0.0, 4.6, 0.0);
+            float curveM2 = (1.0 - (qSM2.y / 0.72) * (qSM2.y / 0.72)) * (1.0 - (qSM2.x / 1.25) * (qSM2.x / 1.25)) * (windBillow * 0.9);
+            float dSailM2 = max(sdBox(qSM2 - vec3(0.0, 0.0, curveM2), vec3(1.25, 0.70, 0.022)), -qSM2.y - 0.72);
+
+            // Voile Misaine Inférieure
+            vec3 qSF1 = q - vec3(0.0, 2.6, 1.9);
+            float curveF1 = (1.0 - (qSF1.y / 0.75) * (qSF1.y / 0.75)) * (1.0 - (qSF1.x / 1.35) * (qSF1.x / 1.35)) * windBillow;
+            float dSailF1 = max(sdBox(qSF1 - vec3(0.0, 0.0, curveF1), vec3(1.35, 0.72, 0.025)), -qSF1.y - 0.75);
+
+            // Voile Misaine Supérieure
+            vec3 qSF2 = q - vec3(0.0, 4.2, 1.9);
+            float curveF2 = (1.0 - (qSF2.y / 0.65) * (qSF2.y / 0.65)) * (1.0 - (qSF2.x / 0.95) * (qSF2.x / 0.95)) * (windBillow * 0.85);
+            float dSailF2 = max(sdBox(qSF2 - vec3(0.0, 0.0, curveF2), vec3(0.95, 0.62, 0.022)), -qSF2.y - 0.65);
+
+            // Voile d'Artimon
+            vec3 qSZ1 = q - vec3(0.0, 2.95, -1.8);
+            float curveZ1 = (1.0 - (qSZ1.y / 0.68) * (qSZ1.y / 0.68)) * (1.0 - (qSZ1.x / 1.05) * (qSZ1.x / 1.05)) * windBillow;
+            float dSailZ1 = max(sdBox(qSZ1 - vec3(0.0, 0.0, curveZ1), vec3(1.05, 0.65, 0.022)), -qSZ1.y - 0.68);
+
+            // Foc triangulaire avant (entre beaupré et mât de misaine)
+            vec3 qJib = q - vec3(0.0, 1.6, 3.2);
+            float dJib = sdBox(qJib - vec3(0.0, 0.0, (1.0 - abs(qJib.y / 0.9)) * 0.18), vec3(0.025, 0.90, 0.95));
+
+            float dSails = min(min(min(dSailM1, dSailM2), min(dSailF1, dSailF2)), min(dSailZ1, dJib));
+            if (dSails < dMin) {
+                dMin = dSails;
+                matId = 3; // Toile des voiles
+            }
+
+            // 5. PAVILLON PIRATE (JOLLY ROGER) FLOTTANT AU VENT
+            vec3 qFlag = q - vec3(0.0, 6.2, -0.45);
+            float flagWave = sin(u_time * 7.0 + qFlag.z * 6.0) * 0.08 * smoothstep(0.0, -0.6, qFlag.z);
+            float dFlag = sdBox(qFlag - vec3(flagWave, 0.0, 0.0), vec3(0.02, 0.22, 0.42));
+            if (dFlag < dMin) {
+                dMin = dFlag;
+                matId = 5; // Pavillon noir pirate
+            }
+
+            // 6. LANTERNE DE POUPE DORÉE AVEC SOURCE LUMINEUSE
+            vec3 qLantern = q - vec3(0.0, 1.65, -3.95);
+            float dLanternFrame = sdCappedCylinder(qLantern, 0.22, 0.14) - 0.015;
+            if (dLanternFrame < dMin) {
+                dMin = dLanternFrame;
+                matId = 6; // Lanterne brillante
+            }
+
+            // 7. CANONS SUR LES SABORDS (BABORD ET TRIBORD)
+            vec3 qCannon = q;
+            qCannon.z = mod(q.z + 1.2, 1.4) - 0.7;
+            float cannonMask = step(abs(q.z), 2.2);
+            if (cannonMask > 0.5) {
+                float dGunLeft = sdCappedCylinder((q - vec3(-1.3, 0.35, q.z)).zxy, 0.35, 0.05);
+                float dGunRight = sdCappedCylinder((q - vec3(1.3, 0.35, q.z)).zxy, 0.35, 0.05);
+                float dCannons = min(dGunLeft, dGunRight);
+                if (dCannons < dMin) {
+                    dMin = dCannons;
+                    matId = 7; // Bronze canons
+                }
+            }
+
+            return dMin;
+        }
+
+        float map_ship_simple(vec3 q) {
+            int dummyMat;
+            return map_ship_detail(q, dummyMat);
+        }
+
+        // Normales du navire
+        vec3 getShipNormal(vec3 q) {
+            int dummy;
+            float d = map_ship_detail(q, dummy);
+            vec2 e = vec2(0.015, 0.0);
+            return normalize(vec3(
+                map_ship_detail(q + e.xyy, dummy) - d,
+                map_ship_detail(q + e.yxy, dummy) - d,
+                map_ship_detail(q + e.yyx, dummy) - d
+            ));
+        }
+
+        // Raymarching du galion
+        float raymarchShip(vec3 ro, vec3 rd, float maxDist, out int outMat, out vec3 outLocalP) {
+            outMat = 0;
+            outLocalP = vec3(0.0);
+
+            float tNear, tFar;
+            if (!shipBoundingTest(ro, rd, tNear, tFar)) return maxDist;
+
+            float t = max(tNear - 0.1, 0.0);
+            tFar = min(tFar + 0.1, maxDist);
+
+            for (int i = 0; i < 70; i++) {
+                vec3 p = ro + rd * t;
+                vec3 q = worldToShip(p);
+                int matId;
+                float d = map_ship_detail(q, matId);
+
+                if (d < 0.01) {
+                    outMat = matId;
+                    outLocalP = q;
+                    return t;
+                }
+                t += d * 0.78;
+                if (t > tFar) break;
+            }
+            return maxDist;
+        }
+
+        // Anti-aliased normal calculation with adaptive epsilon to suppress grid aliasing
+        vec3 getSeaNormal(vec3 p, float eps) {
+            vec3 n;
+            n.y = map_sea_detailed(p);
+            n.x = map_sea_detailed(vec3(p.x + eps, p.y, p.z)) - n.y;
+            n.z = map_sea_detailed(vec3(p.x, p.y, p.z + eps)) - n.y;
+            n.y = eps;
+            return normalize(n);
+        }
+
+        vec3 getIslandNormal(vec3 p) {
+            float d = map_island(p);
+            vec2 e = vec2(0.02, 0.0);
+            return normalize(vec3(
+                map_island(p + e.xyy) - d,
+                map_island(p + e.yxy) - d,
+                map_island(p + e.yyx) - d
+            ));
+        }
+
+        vec3 getSkyColor(vec3 rd, vec3 sunDir) {
+            float sunDot = max(dot(rd, sunDir), 0.0);
+            vec3 skyZenith  = vec3(0.02, 0.12, 0.38);
+            vec3 skyHorizon = vec3(0.18, 0.42, 0.62);
+
+            vec3 col = mix(skyHorizon, skyZenith, pow(max(rd.y, 0.0), 0.75));
+            col += vec3(1.0, 0.80, 0.40) * pow(sunDot, 40.0) * 0.15;
+            col += vec3(1.8, 1.7, 1.4) * pow(sunDot, 500.0);
+            return col;
+        }
+
+        vec3 raymarchWater(vec3 ro, vec3 rd, out bool hit, out float outDist) {
+            hit = false;
+            outDist = 130.0;
+
+            float t = 0.5;
+            if (ro.y > 3.0 && rd.y < -0.01) {
+                t = max(0.5, (3.0 - ro.y) / rd.y);
+            }
+
+            float t_prev = t;
+            float dt = 0.25;
+
+            for (int i = 0; i < 85; i++) {
+                vec3 p = ro + rd * t;
+                float h = map_sea(p);
+
+                if (h < 0.0) {
+                    float tA = t_prev;
+                    float tB = t;
+                    for (int j = 0; j < 6; j++) {
+                        float tMid = 0.5 * (tA + tB);
+                        vec3 pMid = ro + rd * tMid;
+                        if (map_sea(pMid) < 0.0) {
+                            tB = tMid;
+                        } else {
+                            tA = tMid;
+                        }
+                    }
+                    hit = true;
+                    outDist = 0.5 * (tA + tB);
+                    return ro + rd * outDist;
+                }
+
+                t_prev = t;
+                dt = 0.15 + t * 0.022;
+                t += dt;
+                if (t > 130.0) break;
+            }
+
+            outDist = 130.0;
+            return ro + rd * 130.0;
+        }
+
+        float raymarchIsland(vec3 ro, vec3 rd, float maxDist) {
+            float dO = 0.0;
+            for (int i = 0; i < 75; i++) {
+                vec3 p = ro + rd * dO;
+                float dS = map_island(p);
+                if (dS < 0.012 || dO > maxDist) break;
+                dO += dS * 0.80;
+            }
+            return dO;
+        }
+
+        vec3 acesFilm(vec3 x) {
+            float a = 2.51;
+            float b = 0.03;
+            float c = 2.43;
+            float d = 0.59;
+            float e = 0.14;
+
+=== BLOC 2 : GLSL SHADER - MATÉRIAUX & ÉCLAIRAGE DU GALION ===
+            // RENDU DU NAVIRE PIRATE
+            // =====================================================================
+            if (distShip < distSea && distShip < distIsland && distShip < 125.0) {
+                vec3 p = ro + rd * distShip;
+                vec3 q = shipLocalP;
+                vec3 localN = getShipNormal(q);
+                
+                // Rotation de la normale locale en coordonnées monde
+                vec3 n = localN;
+                n.xy *= rot2D(u_ship_rot.z);
+                n.yz *= rot2D(u_ship_rot.y);
+                n.xz *= rot2D(u_ship_rot.x);
+                n = normalize(n);
+
+                vec3 ref = reflect(rd, n);
+                float diff = max(dot(n, sunDir), 0.0);
+                float rim = pow(1.0 - max(dot(-rd, n), 0.0), 3.0);
+                vec3 skyAmb = vec3(0.12, 0.24, 0.38) * (n.y * 0.5 + 0.5);
+                vec3 seaBounce = vec3(0.02, 0.25, 0.22) * max(-n.y * 0.6 + 0.4, 0.0);
+
+                if (shipMat == 1) {
+                    // Bois de la coque en chêne vieilli et lattes de pont
+                    float plankStripe = sin(q.y * 22.0) * 0.5 + 0.5;
+                    float woodGrain = noise(vec2(q.z * 4.0, q.y * 12.0));
+                    vec3 darkWood = vec3(0.14, 0.07, 0.03);
+                    vec3 warmWood = vec3(0.28, 0.15, 0.07);
+                    vec3 woodCol = mix(darkWood, warmWood, woodGrain * 0.6 + plankStripe * 0.2);
+
+                    // Ligne de flottaison humide / algues vertes au bas de la quille
+                    float wetLevel = smoothstep(0.4, -0.6, q.y);
+                    woodCol = mix(woodCol, vec3(0.03, 0.08, 0.04), wetLevel * 0.85);
+
+                    float spec = pow(max(dot(ref, sunDir), 0.0), 20.0);
+                    col = woodCol * (diff * vec3(1.2, 1.1, 0.95) + skyAmb + seaBounce);
+                    col += vec3(1.0, 0.9, 0.7) * spec * (0.15 + 0.4 * wetLevel);
+
+                } else if (shipMat == 2) {
+                    // Ornements dorés de la poupe
+                    vec3 goldCol = vec3(0.85, 0.65, 0.22);
+                    float spec = pow(max(dot(ref, sunDir), 0.0), 60.0);
+                    col = goldCol * (diff * 1.3 + skyAmb * 0.8) + vec3(1.2, 1.0, 0.6) * spec * 0.8;
+
+                } else if (shipMat == 3) {
+                    // Voiles blanches en toile avec translucidité (Subsurface Scattering)
+                    vec3 sailBase = vec3(0.88, 0.85, 0.78);
+                    float sss = pow(clamp(dot(sunDir, -rd), 0.0, 1.0), 3.0);
+                    float clothShading = diff * 0.7 + 0.3;
+                    col = sailBase * (clothShading * vec3(1.15, 1.1, 0.95) + skyAmb * 0.6) + vec3(1.1, 0.95, 0.6) * sss * 0.45;
+                    col += vec3(1.0, 0.95, 0.8) * pow(max(dot(ref, sunDir), 0.0), 30.0) * 0.2;
+
+                } else if (shipMat == 4) {
+                    // Mâts et vergues en bois sombre
+                    vec3 mastCol = vec3(0.12, 0.06, 0.02);
+                    col = mastCol * (diff * 1.1 + skyAmb + seaBounce);
+
+                } else if (shipMat == 5) {
+                    // Pavillon Pirate Noir (Jolly Roger) avec tête de mort stylisée
+                    vec3 flagCol = vec3(0.04, 0.04, 0.04);
+                    // Motif blanc au centre du drapeau
+                    vec2 flagUv = (q.zy - vec2(-0.45, 6.2)) * vec2(3.0, 4.0);
+                    if (length(flagUv) < 0.32 || (abs(flagUv.x) - abs(flagUv.y) < 0.08 && length(flagUv) < 0.45)) {
+                        flagCol = vec3(0.85, 0.85, 0.85); // Tête de mort & tibias croisés
+                    }
+                    col = flagCol * (diff * 0.9 + skyAmb * 0.8);
+
+                } else if (shipMat == 6) {
+                    // Lanterne de poupe dorée & lumineuse
+                    col = vec3(1.5, 0.9, 0.3) * 1.5;
+
+                } else if (shipMat == 7) {
+                    // Canons en bronze / fonte
+                    vec3 metalCol = vec3(0.18, 0.16, 0.14);
+                    float spec = pow(max(dot(ref, sunDir), 0.0), 40.0);
+                    col = metalCol * (diff * 1.0 + skyAmb) + vec3(0.9, 0.8, 0.6) * spec * 0.6;
+                }
+
+                // Brume océanique d'atmosphère
+                vec3 deepAzureHaze = vec3(0.05, 0.16, 0.32);
+                col = mix(col, deepAzureHaze, smoothstep(25.0, 120.0, distShip));
+
+
+=== BLOC 3 : GLSL SHADER - SILLAGE D'ÉCUME DU BATEAU ===
+                // SILLAGE D'ÉCUME DYNAMIQUE DU BATEAU (WAKE & BOW FOAM)
+                vec3 qShipWater = worldToShip(seaP);
+                float distShipHull = length(vec2(qShipWater.x / 1.6, qShipWater.z / 4.2)) - 1.0;
+                
+                // Écume le long de la coque + sillage arrière quand le bateau avance
+                if (abs(qShipWater.y) < 1.0 && distShipHull < 0.85) {
+                    float wakeTrail = smoothstep(0.85, -0.2, distShipHull);
+                    float movingSpeedFactor = abs(u_ship_speed) * 0.7 + 0.3;
+                    float wakeNoise = noise(vec2(qShipWater.x * 6.0, qShipWater.z * 4.0 - u_time * 3.0));
+                    float wakeFoam = wakeTrail * wakeNoise * movingSpeedFactor;
+                    col = mix(col, SHORE_FOAM, clamp(wakeFoam * 0.75, 0.0, 0.85));
+                }
+
+
+=== BLOC 4 : JAVASCRIPT - CONTRÔLES UI DU GALION ===
+        // =========================================================================
+        // CONTRÔLES ET PHYSIQUE DU NAVIRE PIRATE
+        // =========================================================================
+        const shipSpeedInput = document.getElementById('ship-speed');
+        const shipLabel = document.getElementById('ship-label');
+        const btnLeft = document.getElementById('btn-left');
+        const btnStop = document.getElementById('btn-stop');
+        const btnRight = document.getElementById('btn-right');
+
+        let shipTargetSpeed = 0.0;
+        let shipActualSpeed = 0.0;
+
+        // Position monde du navire (départ au milieu de la baie)
+        let shipX = 0.0;
+        let shipZ = 13.5;
+        let shipYaw = 0.25;      // Cap (rotation Y)
+        let shipPitch = 0.0;    // Tangage (axe transversal)
+        let shipRoll = 0.0;     // Roulis (axe longitudinal)
+
+        function updateShipLabel(speed) {
+            if (Math.abs(speed) < 0.04) {
+                shipLabel.textContent = "⚓ Statique (Ancré)";
+                shipLabel.style.color = "#f1c40f";
+            } else if (speed < 0) {
+                const knots = Math.round(Math.abs(speed) * 12);
+                shipLabel.textContent = `⬅ Bâbord (${knots} nds)`;
+                shipLabel.style.color = "#00f0ff";
+            } else {
+                const knots = Math.round(speed * 12);
+                shipLabel.textContent = `Tribord (${knots} nds) ➡`;
+                shipLabel.style.color = "#2ecc71";
+            }
+        }
+
+        shipSpeedInput.addEventListener('input', (e) => {
+            shipTargetSpeed = parseFloat(e.target.value);
+            updateShipLabel(shipTargetSpeed);
+        });
+
+        btnLeft.addEventListener('click', () => {
+            shipTargetSpeed = -0.75;
+            shipSpeedInput.value = "-0.75";
+            updateShipLabel(shipTargetSpeed);
+        });
+        btnStop.addEventListener('click', () => {
+            shipTargetSpeed = 0.0;
+            shipSpeedInput.value = "0.0";
+            updateShipLabel(shipTargetSpeed);
+        });
+        btnRight.addEventListener('click', () => {
+            shipTargetSpeed = 0.75;
+            shipSpeedInput.value = "0.75";
+            updateShipLabel(shipTargetSpeed);
+        });
+
+        // Contrôles clavier (Flèches gauche/droite, Q/D, Espace)
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'q' || e.key === 'Q' || e.key === 'a' || e.key === 'A') {
+                shipTargetSpeed = Math.max(-1.0, shipTargetSpeed - 0.25);
+                shipSpeedInput.value = shipTargetSpeed.toFixed(2);
+                updateShipLabel(shipTargetSpeed);
+            } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+                shipTargetSpeed = Math.min(1.0, shipTargetSpeed + 0.25);
+                shipSpeedInput.value = shipTargetSpeed.toFixed(2);
+                updateShipLabel(shipTargetSpeed);
+            } else if (e.key === ' ' || e.key === 's' || e.key === 'S' || e.key === 'ArrowDown') {
+                shipTargetSpeed = 0.0;
+                shipSpeedInput.value = "0.0";
+                updateShipLabel(shipTargetSpeed);
+            }
+        });
+
+=== BLOC 5 : JAVASCRIPT - PHYSIQUE & NAVIGATION DU GALION ===
+            // PHYSIQUE & NAVIGATION DU GALION
+            // =================================================================
+            // Inertie de la vitesse
+            shipActualSpeed += (shipTargetSpeed - shipActualSpeed) * (dt * 2.5);
+
+            // Orientation vers la direction choisie
+            let targetYaw = 0.25; // Ancré : orienté légèrement face au vent
+            if (shipActualSpeed > 0.05) {
+                // Navigation vers Tribord (Droite)
+                targetYaw = 1.35;
+            } else if (shipActualSpeed < -0.05) {
+                // Navigation vers Bâbord (Gauche)
+                targetYaw = -1.35;
+            }
+            shipYaw += (targetYaw - shipYaw) * (dt * 1.8);
+
+            // Déplacement dans la baie
+            const moveVecX = Math.sin(shipYaw) * shipActualSpeed * dt * 4.8;
+            const moveVecZ = Math.cos(shipYaw) * Math.abs(shipActualSpeed) * dt * 0.4;
+            
+            shipX += moveVecX;
+            // Limites dans la baie avec rebond doux
+            if (shipX > 22.0) shipX = -22.0;
+            if (shipX < -22.0) shipX = 22.0;
+
+            // Flottaison et tangage/roulis réaliste sur la houle
+            const waveY = getWaveHeight(shipX, shipZ, t, currentRoughness);
+            const bowY = getWaveHeight(shipX + Math.sin(shipYaw) * 3.0, shipZ + Math.cos(shipYaw) * 3.0, t, currentRoughness);
+            const sternY = getWaveHeight(shipX - Math.sin(shipYaw) * 3.0, shipZ - Math.cos(shipYaw) * 3.0, t, currentRoughness);
+            const portY = getWaveHeight(shipX - Math.cos(shipYaw) * 1.5, shipZ + Math.sin(shipYaw) * 1.5, t, currentRoughness);
+            const starboardY = getWaveHeight(shipX + Math.cos(shipYaw) * 1.5, shipZ - Math.sin(shipYaw) * 1.5, t, currentRoughness);
+
+            const targetPitch = (bowY - sternY) * 0.18 + Math.sin(t * 1.2) * 0.04 * currentRoughness;
+            const targetRoll = (starboardY - portY) * 0.22 - shipActualSpeed * 0.12 + Math.cos(t * 1.5) * 0.05 * currentRoughness;
+
+            shipPitch += (targetPitch - shipPitch) * (dt * 3.0);
+            shipRoll += (targetRoll - shipRoll) * (dt * 3.0);
+
+            const shipY = waveY + 0.15;

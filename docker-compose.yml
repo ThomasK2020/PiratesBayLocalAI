@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  pirates-bay-sandbox:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pirates-bay-sandbox
+    restart: unless-stopped
+    mem_limit: 4g
+    cpus: 2.0
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - ./workspace:/app/workspace
+    environment:
+      - PYTHONUNBUFFERED=1

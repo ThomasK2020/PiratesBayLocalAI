@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pirate's Bay — Océan Organique & Galion Pirate (AMD Radeon 8060S)</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body, html { width: 100%; height: 100%; overflow: hidden; background: #01060e; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        canvas { display: block; width: 100vw; height: 100vh; }
+
+        /* Bandeau supérieur épuré */
+        #header {
+            position: absolute;
+            top: 14px;
+            left: 16px;
+            right: 16px;
+            height: 54px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(2, 10, 20, 0.88);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(0, 210, 255, 0.3);
+            border-radius: 12px;
+            padding: 0 18px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.65);
+            z-index: 100;
+        }
+
+        .title-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        h1 {
+            font-size: 1.0rem;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+        .gpu-badge {
+            background: rgba(0, 210, 255, 0.15);
+            color: #00d2ff;
+            border: 1px solid rgba(0, 210, 255, 0.35);
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 0.74rem;
+            font-family: monospace;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        /* Groupes de contrôles interactifs */
+        .controls-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .control-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #b0d4ec;
+            font-size: 0.80rem;
+        }
+        .control-item label {
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .val-badge {
+            color: #00f0ff;
+            font-weight: 600;
+            min-width: 130px;
+            display: inline-block;
+        }
+        .ship-val-badge {
+            color: #f1c40f;
+            font-weight: 600;
+            min-width: 170px;
+            display: inline-block;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 110px;
+            height: 6px;
+            background: rgba(0, 210, 255, 0.2);
+            border-radius: 3px;
+            outline: none;
+            cursor: pointer;
+        }
+        #ship-speed {
+            width: 140px;
+            background: rgba(241, 196, 15, 0.25);
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #00f0ff;
+            box-shadow: 0 0 8px rgba(0, 240, 255, 0.8);
+            cursor: pointer;
+            transition: transform 0.1s ease;
+        }
+        #ship-speed::-webkit-slider-thumb {
+            background: #f1c40f;
+            box-shadow: 0 0 8px rgba(241, 196, 15, 0.8);
+        }
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.25);
+        }
+
+        .quick-nav-btns {
+            display: flex;
+            gap: 4px;
+        }
+        .btn-nav {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #e0e0e0;
+            border-radius: 4px;
+            padding: 3px 7px;
+            font-size: 0.72rem;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .btn-nav:hover {
+            background: rgba(241, 196, 15, 0.3);
+            border-color: #f1c40f;
+            color: #fff;
+        }
+
+        .stats-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: monospace;
+            font-size: 0.75rem;
+        }
+        .stat-pill {
+            background: rgba(255, 255, 255, 0.06);
+            color: #2ecc71;
+            padding: 3px 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            white-space: nowrap;
+        }
+
+        #hint {
+            position: absolute;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.8);
+            background: rgba(1, 8, 16, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            padding: 6px 18px;
+            border-radius: 20px;
+            font-size: 0.76rem;
+            pointer-events: none;
+            letter-spacing: 0.4px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+            white-space: nowrap;
+        }
+        kbd {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 1px 5px;
+            border-radius: 3px;
+            font-family: monospace;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div id="header">
+        <div class="title-group">
+            <h1>🏝️ Pirate's Bay</h1>
+            <span class="gpu-badge">Radeon 8060S</span>
+        </div>
+
+        <div class="controls-wrapper">
+            <!-- Contrôle Radeau de Secours -->
+            <div class="control-item">
+                <label for="ship-speed">🛟 Radeau : <span id="ship-label" class="ship-val-badge">Dérive calme</span></label>
+                <div class="quick-nav-btns">
+                    <button class="btn-nav" id="btn-left" title="Pivoter vers la gauche">↺ Rotation G</button>
+                    <button class="btn-nav" id="btn-stop" title="Arrêter la rotation et l'avance">⏹ Stop</button>
+                    <button class="btn-nav" id="btn-right" title="Pivoter vers la droite">Rotation D ↻</button>
+                </div>
+                <input type="range" id="ship-speed" min="-1.0" max="1.0" step="0.05" value="0.0" title="Vitesse de propulsion / dérive">
+            </div>
+
+            <!-- Contrôle Houle / Mer -->
+            <div class="control-item">
+                <label for="roughness">🌊 Mer : <span id="roughness-label" class="val-badge">Forte houle</span></label>
+                <input type="range" id="roughness" min="0.2" max="2.0" step="0.05" value="1.0">
+            </div>
+        </div>
+
+        <div class="stats-group">
+            <span class="stat-pill" id="fps">FPS: --</span>
+            <span class="stat-pill" id="res">Résolution: --</span>
+        </div>
+    </div>
+
+    <div id="hint">Curseur ou <kbd>←</kbd> / <kbd>→</kbd> pour orienter le radeau | <kbd>↑</kbd> / <kbd>↓</kbd> pour avancer | <kbd>Espace</kbd> pour stopper | Clic & Glisser pour orienter la vue</div>
+    <canvas id="glcanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('glcanvas');
+        const gl = canvas.getContext('webgl2', { powerPreference: 'high-performance', antialias: false, depth: false });
+        if (!gl) alert('WebGL 2.0 non disponible.');
+
+        const vsSource = `#version 300 es
+        in vec2 position;
+        void main() {
+            gl_Position = vec4(position, 0.0, 1.0);
+        }`;
+
+        const fsSource = `#version 300 es
+        precision highp float;
+        out vec4 fragColor;
+
+        uniform vec2 u_resolution;
+        uniform float u_time;
+        uniform vec2 u_mouse;
+        uniform float u_zoom;
+        uniform float u_roughness;
+        uniform vec3 u_ship_pos;       // Position du radeau dans la baie (X, Y, Z)
+        uniform vec3 u_ship_rot;       // Orientation : yaw (axe vertical uniquement, pitch=0, roll=0)
+        uniform float u_ship_speed;    // Vitesse effective de déplacement (-1.0 à 1.0)
+
+        #define PI 3.14159265359
+
+        const int ITER_GEOMETRY = 5;
+        const int ITER_FRAGMENT = 6;
+        const float BASE_FREQ = 0.13;
+
+        // Couleurs de l'océan
+        const vec3 SEA_BASE = vec3(0.012, 0.075, 0.19);
+        const vec3 SEA_TROPICAL_TINT = vec3(0.08, 0.55, 0.50);
+        const vec3 SHORE_FOAM = vec3(0.92, 0.96, 0.95);
+
+        // Matrices de rotation sans alignement cartésien
+        const mat2 octave_m = mat2(1.58, 1.18, -1.18, 1.58);
+        const mat2 skew_m = mat2(0.92, -0.38, 0.38, 0.92);
+
+        mat2 rot2D(float a) {
+            float s = sin(a), c = cos(a);
+            return mat2(c, -s, s, c);
+        }
+
+        float hash(vec2 p) {
+            return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+        }
+
+        float hash3(vec3 p) {
+            return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453123);
+        }
+
+        // Interpolation quintique C2 de Perlin
+        float noise(vec2 p) {
+            vec2 i = floor(p);
+            vec2 f = fract(p);
+            vec2 u = f * f * f * (f * (f * 6.0 - 15.0) + 10.0);
+            return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x),
+                       mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x), u.y);
+        }
+
+        float noise3(vec3 p) {
+            vec3 i = floor(p);
+            vec3 f = fract(p);
+            vec3 u = f * f * f * (f * (f * 6.0 - 15.0) + 10.0);
+            return mix(
+                mix(mix(hash3(i), hash3(i + vec3(1.0, 0.0, 0.0)), u.x),
+                    mix(hash3(i + vec3(0.0, 1.0, 0.0)), hash3(i + vec3(1.0, 1.0, 0.0)), u.x), u.y),
+                mix(mix(hash3(i + vec3(0.0, 0.0, 1.0)), hash3(i + vec3(1.0, 0.0, 1.0)), u.x),
+                    mix(hash3(i + vec3(0.0, 1.0, 1.0)), hash3(i + vec3(1.0, 1.0, 1.0)), u.x), u.y), u.z);
+        }
+
+        float fbm3(vec3 p) {
+            float v = 0.0;
+            float a = 0.5;
+            for (int i = 0; i < 4; i++) {
+                v += a * noise3(p);
+                p *= 2.1;
+                a *= 0.5;
+            }
+            return v;
+        }
+
+        // Octave d'onde trochoïdale directionnelle
+        float sea_octave(vec2 uv, float choppy) {
+            uv += noise(uv);
+            vec2 wv = 1.0 - abs(sin(uv));
+            vec2 swv = abs(cos(uv));
+            wv = mix(wv, swv, wv);
+            return pow(1.0 - pow(wv.x * wv.y, 0.65), choppy);
+        }
+
+        // Champ de hauteur de l'océan
+        float map_sea(vec3 p) {
+            float freq = BASE_FREQ;
+            float amp = 1.05 * u_roughness;
+            float choppy = mix(2.0, 4.6, clamp((u_roughness - 0.2) / 1.8, 0.0, 1.0));
+            float speed = mix(0.65, 1.25, clamp((u_roughness - 0.2) / 1.8, 0.0, 1.0));
+            float t = u_time * speed;
+
+            vec2 dir1 = vec2(0.88, 0.47);
+            vec2 dir2 = vec2(-0.58, 0.81);
+
+            vec2 uv = p.xz * skew_m;
+
+            float d, h = 0.0;
+            for (int i = 0; i < ITER_GEOMETRY; i++) {
+                d = sea_octave(uv * freq + dir1 * (t * 1.05), choppy);
+                d += sea_octave(uv * (freq * 1.15) + dir2 * (t * 0.90), choppy);
+                h += d * amp;
+
+                uv *= octave_m;
+                freq *= 1.88;
+                amp *= 0.22;
+                choppy = mix(choppy, 1.0, 0.2);
+            }
+            return p.y - h;
+        }
+
+        float map_sea_detailed(vec3 p) {
+            float freq = BASE_FREQ;
+            float amp = 1.05 * u_roughness;
+            float choppy = mix(2.0, 4.6, clamp((u_roughness - 0.2) / 1.8, 0.0, 1.0));
+            float speed = mix(0.65, 1.25, clamp((u_roughness - 0.2) / 1.8, 0.0, 1.0));
+            float t = u_time * speed;
+
+            vec2 dir1 = vec2(0.88, 0.47);
+            vec2 dir2 = vec2(-0.58, 0.81);
+
+            vec2 uv = p.xz * skew_m;
+
+            float d, h = 0.0;
+            for (int i = 0; i < ITER_FRAGMENT; i++) {
+                d = sea_octave(uv * freq + dir1 * (t * 1.05), choppy);
+                d += sea_octave(uv * (freq * 1.15) + dir2 * (t * 0.90), choppy);
+                h += d * amp;
+
+                uv *= octave_m;
+                freq *= 1.88;
+                amp *= 0.22;
+                choppy = mix(choppy, 1.0, 0.2);
+            }
+            return p.y - h;
+        }
+
+        // Falaises et îles
+        float sdPillar(vec3 p, vec3 pos, float radius, float height, float seed) {
+            vec3 q = p - pos;
+            float fluting = sin(atan(q.z, q.x) * 7.0 + seed) * 0.45;
+            float strata = sin(q.y * 1.6 + noise(q.xz * 0.5) * 2.0) * 0.25;
+            float notch = smoothstep(1.5, 0.0, abs(q.y - 0.2)) * 0.45;
+            float rootWidening = max(-q.y * 0.40, 0.0);
+
+            float canopyWeight = smoothstep(height * 0.35, height * 0.75, q.y);
+            float canopyBumps = ((sin(q.x * 1.5) * cos(q.z * 1.5)) * 0.85 + fbm3(q * 1.1) * 0.7) * canopyWeight;
+
+            float dCyl = length(q.xz) - (radius + fluting + strata - notch + canopyBumps + rootWidening);
+            float dCap = q.y - (height + fbm3(q * 0.35) * 3.0);
+            return max(dCyl, dCap);
+        }
+
+        float map_island(vec3 p) {
+            float d1 = sdPillar(p, vec3(-11.0, 0.0, 22.0), 7.0, 9.5, 1.2);
+            float d2 = sdPillar(p, vec3(15.0, -0.5, 35.0), 8.5, 12.0, 4.5);
+
+            vec3 q3 = p - vec3(2.0, -1.0, 75.0);
+            float r3 = length(q3.xz) - 28.0;
+            float h3 = q3.y - (20.0 - length(q3.xz) * 0.35 + fbm3(q3 * 0.2) * 4.0);
+            float d3 = max(r3, h3) - fbm3(q3 * 0.35) * 3.0;
+
+            return min(min(d1, d2), d3);
+        }
+
+        // =========================================================================
+        // MODÈLE DU RADEAU DE SECOURS HAUTE VISIBILITÉ (SDF sd_raft)
+        // Conception allongée mais parfaitement symétrique (rotation sur axe central)
+        // Matériaux : Orange pastel haute visibilité, composite technique, bandes SOLAS
+        // =========================================================================
+        
+        float sdBox(vec3 p, vec3 b) {
+            vec3 q = abs(p) - b;
+            return length(max(q, 0.0)) + min(max(q.x, max(q.y, q.z)), 0.0);
+        }
+
+        vec3 worldToRaft(vec3 p) {
+            vec3 q = p - u_ship_pos;
+            q.xz *= rot2D(-u_ship_rot.x); // Rotation sur axe vertical uniquement
+            return q;
+        }
+
+        bool raftBoundingTest(vec3 ro, vec3 rd, out float tNear, out float tFar) {
+            vec3 boxMin = u_ship_pos - vec3(2.5, 0.9, 3.2);
+            vec3 boxMax = u_ship_pos + vec3(2.5, 2.6, 3.2);
+
+            vec3 invD = 1.0 / rd;
+            vec3 t0 = (boxMin - ro) * invD;
+            vec3 t1 = (boxMax - ro) * invD;
+            vec3 tSmall = min(t0, t1);
+            vec3 tBig = max(t0, t1);
+
+            tNear = max(max(tSmall.x, tSmall.y), tSmall.z);
+            tFar = min(min(tBig.x, tBig.y), tBig.z);
+
+            return (tFar >= max(tNear, 0.0));
+        }
+
+        // sd_raft : SDF du radeau de secours haute visibilité
+        float sd_raft(vec3 q, out int matId) {
+            // Symétrie absolue transversale (x) et longitudinale (z) pour rotation centrale libre
+            vec3 symQ = vec3(abs(q.x), q.y, abs(q.z));
+
+            // 1. Double boudin torique allongé (flotteurs pneumatiques SOLAS haute visibilité)
+            vec2 p2 = symQ.xz - vec2(0.95, 1.35);
+            float dPerimeter = length(max(p2, 0.0)) + min(max(p2.x, p2.y), 0.0) - 0.32;
+            
+            // Flotteur bas et flotteur haut superposés
+            float dTubeLow = length(vec2(dPerimeter, q.y - 0.18)) - 0.36;
+            float dTubeHigh = length(vec2(dPerimeter, q.y - 0.60)) - 0.32;
+            float dPontoons = min(dTubeLow, dTubeHigh);
+
+            // 2. Plancher étanche intérieur (surface antidérapante)
+            float dFloor = sdBox(q - vec3(0.0, 0.12, 0.0), vec3(0.95, 0.08, 1.35)) - 0.05;
+
+            // 3. Arceau transversal central de survie (Canopy roll-bar)
+            float archR = 1.15;
+            float dArch = length(vec2(length(vec2(q.x, max(q.y - 0.50, 0.0))) - archR, q.z)) - 0.11;
+            
+            // Longeron sommital longitudinal reliant les deux extrémités
+            float dSpine = length(vec2(q.x, q.y - (0.50 + archR))) - 0.09;
+            dSpine = max(dSpine, symQ.z - 1.45);
+            float dStructure = min(dArch, dSpine);
+
+            // 4. Balise de détresse lumineuse (strobe beacon) au sommet
+            float dBeacon = length(q - vec3(0.0, 0.50 + archR + 0.14, 0.0)) - 0.13;
+
+            // 5. Ligne de vie extérieure (cordage de maintien périmétrique)
+            float dRope = length(vec2(dPerimeter - 0.32, q.y - 0.38)) - 0.045;
+            dRope += sin(atan(q.z, q.x) * 14.0) * 0.015;
+
+            // 6. Bandes rétro-réfléchissantes SOLAS
+            bool isSolas = false;
+            if (abs(symQ.x - 0.95) < 0.22 && abs(symQ.z - 1.35) < 0.26 && q.y > 0.48 && q.y < 0.78) isSolas = true;
+            if (abs(q.z) < 0.14 && abs(q.x) > 0.60 && abs(q.x) < 0.95 && q.y > 1.1) isSolas = true;
+
+            // Matériaux : 1=Orange pastel, 2=Plancher gris, 3=Bandes SOLAS, 4=Balise, 5=Cordage
+            float d = dPontoons;
+            matId = isSolas ? 3 : 1;
+
+            if (dFloor < d) {
+                d = dFloor;
+                matId = 2;
+            }
+            if (dStructure < d) {
+                d = dStructure;
+                matId = isSolas ? 3 : 1;
+            }
+            if (dRope < d) {
+                d = dRope;
+                matId = 5;
+            }
+            if (dBeacon < d) {
+                d = dBeacon;
+                matId = 4;
+            }
+
+            return d;
+        }
+
+        vec3 getRaftNormal(vec3 q) {
+            int dummy;
+            float d = sd_raft(q, dummy);
+            vec2 e = vec2(0.005, 0.0);
+            return normalize(vec3(
+                sd_raft(q + e.xyy, dummy) - d,
+                sd_raft(q + e.yxy, dummy) - d,
+                sd_raft(q + e.yyx, dummy) - d
+            ));
+        }
+
+        float raymarchRaft(vec3 ro, vec3 rd, float maxDist, out int outMat, out vec3 outLocalP) {
+            outMat = 0;
+            outLocalP = vec3(0.0);
+
+            float tNear, tFar;
+            if (!raftBoundingTest(ro, rd, tNear, tFar)) return maxDist;
+
+            float t = max(tNear - 0.05, 0.0);
+            tFar = min(tFar + 0.05, maxDist);
+
+            for (int i = 0; i < 48; i++) {
+                vec3 p = ro + rd * t;
+                vec3 q = worldToRaft(p);
+                int matId;
+                float d = sd_raft(q, matId);
+
+                if (d < 0.008) {
+                    outMat = matId;
+                    outLocalP = q;
+                    return t;
+                }
+                t += d * 0.85;
+                if (t > tFar) break;
+            }
+            return maxDist;
+        }
+
+        // Anti-aliased normal calculation with adaptive epsilon to suppress grid aliasing
+        vec3 getSeaNormal(vec3 p, float eps) {
+            vec3 n;
+            n.y = map_sea_detailed(p);
+            n.x = map_sea_detailed(vec3(p.x + eps, p.y, p.z)) - n.y;
+            n.z = map_sea_detailed(vec3(p.x, p.y, p.z + eps)) - n.y;
+            n.y = eps;
+            return normalize(n);
+        }
+
+        vec3 getIslandNormal(vec3 p) {
+            float d = map_island(p);
+            vec2 e = vec2(0.02, 0.0);
+            return normalize(vec3(
+                map_island(p + e.xyy) - d,
+                map_island(p + e.yxy) - d,
+                map_island(p + e.yyx) - d
+            ));
+        }
+
+        vec3 getSkyColor(vec3 rd, vec3 sunDir) {
+            float sunDot = max(dot(rd, sunDir), 0.0);
+            vec3 skyZenith  = vec3(0.02, 0.12, 0.38);
+            vec3 skyHorizon = vec3(0.18, 0.42, 0.62);
+
+            vec3 col = mix(skyHorizon, skyZenith, pow(max(rd.y, 0.0), 0.75));
+            col += vec3(1.0, 0.80, 0.40) * pow(sunDot, 40.0) * 0.15;
+            col += vec3(1.8, 1.7, 1.4) * pow(sunDot, 500.0);
+            return col;
+        }
+
+        vec3 raymarchWater(vec3 ro, vec3 rd, out bool hit, out float outDist) {
+            hit = false;
+            outDist = 130.0;
+
+            float t = 0.5;
+            if (ro.y > 3.0 && rd.y < -0.01) {
+                t = max(0.5, (3.0 - ro.y) / rd.y);
+            }
+
+            float t_prev = t;
+            float dt = 0.25;
+
+            for (int i = 0; i < 85; i++) {
+                vec3 p = ro + rd * t;
+                float h = map_sea(p);
+
+                if (h < 0.0) {
+                    float tA = t_prev;
+                    float tB = t;
+                    for (int j = 0; j < 6; j++) {
+                        float tMid = 0.5 * (tA + tB);
+                        vec3 pMid = ro + rd * tMid;
+                        if (map_sea(pMid) < 0.0) {
+                            tB = tMid;
+                        } else {
+                            tA = tMid;
+                        }
+                    }
+                    hit = true;
+                    outDist = 0.5 * (tA + tB);
+                    return ro + rd * outDist;
+                }
+
+                t_prev = t;
+                dt = 0.15 + t * 0.022;
+                t += dt;
+                if (t > 130.0) break;
+            }
+
+            outDist = 130.0;
+            return ro + rd * 130.0;
+        }
+
+        float raymarchIsland(vec3 ro, vec3 rd, float maxDist) {
+            float dO = 0.0;
+            for (int i = 0; i < 75; i++) {
+                vec3 p = ro + rd * dO;
+                float dS = map_island(p);
+                if (dS < 0.012 || dO > maxDist) break;
+                dO += dS * 0.80;
+            }
+            return dO;
+        }
+
+        vec3 acesFilm(vec3 x) {
+            float a = 2.51;
+            float b = 0.03;
+            float c = 2.43;
+            float d = 0.59;
+            float e = 0.14;
+            return clamp((x * (a * x + b)) / (x * (c * x + d) + e), 0.0, 1.0);
+        }
+
+        void main() {
+            vec2 uv = (gl_FragCoord.xy - 0.5 * u_resolution) / u_resolution.y;
+
+            float yaw = (u_mouse.x - 0.5) * 2.2;
+            float pitch = -(u_mouse.y - 0.5) * 1.2;
+
+            float camSwell = sin(u_time * 0.5 * u_roughness) * (0.15 + 0.15 * u_roughness);
+            vec3 ro = vec3(sin(u_time * 0.03) * 5.0, 3.2 + camSwell + u_zoom, -11.0 + cos(u_time * 0.03) * 3.5);
+            vec3 rd = normalize(vec3(uv, 1.25));
+
+            rd.yz *= rot2D(pitch - 0.04);
+            rd.xz *= rot2D(yaw);
+
+            vec3 sunDir = normalize(vec3(0.55, 0.40, 0.70));
+            vec3 col = vec3(0.0);
+
+            // 1. Raymarching de l'océan
+            bool seaHit = false;
+            float distSea = 130.0;
+            vec3 seaP = raymarchWater(ro, rd, seaHit, distSea);
+
+            // 2. Raymarching des îles
+            float distIsland = raymarchIsland(ro, rd, distSea);
+
+            // 3. Raymarching du Radeau de Secours
+            int raftMat = 0;
+            vec3 raftLocalP = vec3(0.0);
+            float distRaft = raymarchRaft(ro, rd, min(distSea, distIsland), raftMat, raftLocalP);
+
+            // =====================================================================
+            // RENDU DU RADEAU DE SECOURS (ORANGE PASTEL HAUTE VISIBILITÉ)
+            // =====================================================================
+            if (distRaft < distSea && distRaft < distIsland && distRaft < 125.0) {
+                vec3 p = ro + rd * distRaft;
+                vec3 q = raftLocalP;
+                vec3 localN = getRaftNormal(q);
+                
+                // Rotation de la normale en coordonnées monde (axe vertical uniquement)
+                vec3 n = localN;
+                n.xz *= rot2D(u_ship_rot.x);
+                n = normalize(n);
+
+                vec3 ref = reflect(rd, n);
+                float diff = max(dot(n, sunDir), 0.0);
+                float rim = pow(1.0 - max(dot(-rd, n), 0.0), 3.0);
+                vec3 skyAmb = vec3(0.14, 0.28, 0.42) * (n.y * 0.5 + 0.5);
+                vec3 seaBounce = vec3(0.03, 0.28, 0.24) * max(-n.y * 0.6 + 0.4, 0.0);
+
+                if (raftMat == 1) {
+                    // Tissu orange pastel haute visibilité (flotteurs et structure)
+                    vec3 orangePastel = vec3(1.0, 0.40, 0.08);
+                    // Légère texture de tissu enduit / nervures de segmentation
+                    float segments = cos(atan(q.z, q.x) * 8.0) * 0.04;
+                    orangePastel = mix(orangePastel, vec3(0.92, 0.35, 0.06), segments);
+
+                    // Mouillage à la base du flotteur
+                    float wetLevel = smoothstep(0.35, -0.1, q.y);
+                    orangePastel = mix(orangePastel, orangePastel * 0.72, wetLevel * 0.5);
+
+                    // Spécularité douce de polymère marin / fibre plastique traitée
+                    float spec = pow(max(dot(ref, sunDir), 0.0), 28.0);
+                    col = orangePastel * (diff * vec3(1.25, 1.15, 0.95) + skyAmb + seaBounce);
+                    col += vec3(1.0, 0.92, 0.85) * spec * (0.25 + 0.35 * wetLevel) + rim * vec3(1.0, 0.5, 0.2) * 0.20;
+
+                } else if (raftMat == 2) {
+                    // Plancher technique antidérapant (composite gris anthracite)
+                    vec3 floorCol = vec3(0.20, 0.22, 0.24);
+                    float grid = sin(q.z * 20.0) * sin(q.x * 20.0) * 0.03;
+                    floorCol += grid;
+                    float spec = pow(max(dot(ref, sunDir), 0.0), 12.0);
+                    col = floorCol * (diff * 1.0 + skyAmb + seaBounce) + vec3(0.8) * spec * 0.1;
+
+                } else if (raftMat == 3) {
+                    // Bandes réfléchissantes SOLAS (haute réflectivité blanche/argentée)
+                    vec3 tapeCol = vec3(0.94, 0.95, 0.96);
+                    float spec = pow(max(dot(ref, sunDir), 0.0), 50.0);
+                    float retro = pow(max(dot(-rd, sunDir), 0.0), 8.0);
+                    col = tapeCol * (diff * 1.2 + skyAmb * 0.9) + vec3(1.0) * (spec * 0.6 + retro * 0.3);
+
+                } else if (raftMat == 4) {
+                    // Balise de détresse (strobe light au sommet)
+                    float strobe = sin(u_time * 7.0);
+                    vec3 beaconFlash = (strobe > 0.4) ? vec3(2.5, 2.4, 1.8) : vec3(0.9, 0.3, 0.1);
+                    col = beaconFlash;
+
+                } else if (raftMat == 5) {
+                    // Lignes de vie jaunes de sécurité
+                    vec3 ropeCol = vec3(0.95, 0.82, 0.20);
+                    col = ropeCol * (diff * 1.1 + skyAmb * 0.8);
+                }
+
+                // Brume océanique d'atmosphère
+                vec3 deepAzureHaze = vec3(0.05, 0.16, 0.32);
+                col = mix(col, deepAzureHaze, smoothstep(25.0, 120.0, distRaft));
+
+            } else if (distIsland < distSea && distIsland < 125.0) {
+                // --- FALAISES & JUNGLE TROPICALE ---
+                vec3 p = ro + rd * distIsland;
+                vec3 n = getIslandNormal(p);
+                vec3 ref = reflect(rd, n);
+
+                float diff = max(dot(n, sunDir), 0.0);
+
+                float strataNoise = noise(vec2(p.y * 2.0 + noise(p.xz * 1.2) * 2.0, p.x * 0.5));
+                float rockDetail = fbm3(p * 1.4);
+                float crackNoise = abs(noise3(p * 3.0) - 0.5) * 2.0;
+
+                vec3 rockDark   = vec3(0.18, 0.16, 0.14);
+                vec3 rockWarm   = vec3(0.32, 0.24, 0.18);
+                vec3 rockLight  = vec3(0.36, 0.34, 0.30);
+
+                vec3 rockBase = mix(rockDark, rockWarm, strataNoise);
+                rockBase = mix(rockBase, rockLight, rockDetail * 0.45);
+                rockBase *= (0.75 + 0.25 * crackNoise);
+
+                float heightWaterContact = p.y - (-map_sea(p));
+                float wetZone = smoothstep(1.2, -0.4, heightWaterContact);
+                vec3 wetAlgae = vec3(0.04, 0.10, 0.05);
+                rockBase = mix(rockBase, wetAlgae, wetZone * 0.85);
+
+                float foliageCluster = noise3(p * 2.8);
+                vec3 canopySunlit  = vec3(0.24, 0.48, 0.10);
+                vec3 canopyEmerald = vec3(0.05, 0.28, 0.06);
+                vec3 canopyShadow  = vec3(0.02, 0.12, 0.03);
+
+                vec3 jungleCanopy = mix(canopyEmerald, canopySunlit, foliageCluster);
+                jungleCanopy = mix(canopyShadow, jungleCanopy, smoothstep(0.2, 0.8, n.y));
+
+                float leafTranslucency = pow(max(dot(sunDir, -rd), 0.0), 3.0) * max(n.y, 0.0);
+                jungleCanopy += vec3(0.30, 0.55, 0.08) * leafTranslucency * 0.45;
+
+                float vegetationMask = smoothstep(0.28, 0.62, n.y) * smoothstep(0.8, 2.5, p.y);
+                vec3 surfaceColor = mix(rockBase, jungleCanopy, vegetationMask);
+
+                vec3 skyAmbient = vec3(0.12, 0.24, 0.38) * (n.y * 0.5 + 0.5);
+                vec3 seaBounce  = vec3(0.02, 0.22, 0.20) * max(-n.y * 0.6 + 0.4, 0.0);
+                vec3 totalAmbient = skyAmbient + seaBounce;
+
+                float rimLight = pow(1.0 - max(dot(-rd, n), 0.0), 3.0) * max(dot(sunDir, -rd), 0.0);
+
+                col = surfaceColor * (diff * vec3(1.15, 1.05, 0.90) + totalAmbient);
+                col += vec3(1.0, 0.85, 0.60) * rimLight * 0.40;
+
+                if (wetZone > 0.15) {
+                    float wetSpec = pow(max(dot(ref, sunDir), 0.0), 35.0);
+                    col += vec3(1.0, 0.95, 0.85) * wetSpec * wetZone * 0.30;
+                }
+
+                vec3 deepAzureHaze = vec3(0.05, 0.16, 0.32);
+                col = mix(col, deepAzureHaze, smoothstep(25.0, 120.0, distIsland));
+
+            } else if (rd.y < 0.0 || seaHit) {
+                // --- OCÉAN ORGANIQUE CONTINU ---
+                float normalEps = max(0.010, distSea * 0.0035);
+                vec3 n = getSeaNormal(seaP, normalEps);
+                vec3 ref = reflect(rd, n);
+
+                float fresnel = clamp(1.0 - dot(n, -rd), 0.0, 1.0);
+                fresnel = min(pow(fresnel, 3.5), 0.48);
+
+                vec3 skyRefl = getSkyColor(ref, sunDir);
+
+                float diff = max(dot(n, sunDir), 0.0) * 0.4 + 0.6;
+                vec3 refracted = SEA_BASE + diff * SEA_TROPICAL_TINT * 0.18;
+
+                col = mix(refracted, skyRefl, fresnel);
+
+                // Lueur sur la crête des vagues
+                float wavePeak = max(seaP.y - 0.85 * u_roughness, 0.0);
+                float atten = max(1.0 - distSea * 0.012, 0.0);
+                col += SEA_TROPICAL_TINT * wavePeak * 0.14 * atten;
+
+                // Translucidité solaire
+                float sss = pow(clamp(dot(sunDir, -rd), 0.0, 1.0), 4.0) * clamp(1.0 - n.y, 0.0, 1.0);
+                col += SEA_TROPICAL_TINT * sss * 0.35 * atten;
+
+                // Reflets spéculaires dorés
+                float sunSpec = pow(max(dot(ref, sunDir), 0.0), 120.0);
+                col += vec3(1.15, 1.0, 0.75) * sunSpec * 1.1;
+
+                // Écume contre les falaises rocheuses
+                float dToIsland = map_island(seaP);
+                if (dToIsland < 0.50) {
+                    float rockContact = smoothstep(0.50, 0.05, dToIsland) * (0.6 + 0.4 * noise(seaP.xz * 4.0));
+                    col = mix(col, SHORE_FOAM, rockContact * 0.60);
+                }
+
+                // Sillage d'écume simplifié du radeau de secours
+                vec3 qRaftWater = seaP - u_ship_pos;
+                qRaftWater.xz *= rot2D(-u_ship_rot.x);
+                float distRaftCenter = length(vec2(qRaftWater.x / 1.35, qRaftWater.z / 1.9));
+                float raftPerimeterDist = abs(distRaftCenter - 1.0);
+                if (abs(qRaftWater.y) < 0.6 && raftPerimeterDist < 0.35) {
+                    float foamRing = smoothstep(0.35, 0.0, raftPerimeterDist);
+                    float foamNoise = noise(vec2(qRaftWater.x * 6.0, qRaftWater.z * 6.0 - u_time * 2.5));
+                    float speedFactor = abs(u_ship_speed) * 0.6 + 0.4;
+                    col = mix(col, SHORE_FOAM, clamp(foamRing * foamNoise * speedFactor * 0.70, 0.0, 0.80));
+                }
+
+                vec3 oceanHorizonHaze = vec3(0.03, 0.12, 0.28);
+                col = mix(col, oceanHorizonHaze, smoothstep(30.0, 130.0, distSea));
+
+            } else {
+                col = getSkyColor(rd, sunDir);
+            }
+
+            // ACES Film Tone Mapping
+            col = acesFilm(col);
+            col = pow(col, vec3(1.0 / 2.2));
+
+            fragColor = vec4(col, 1.0);
+        }`;
+
+        function compileShader(src, type) {
+            const s = gl.createShader(type);
+            gl.shaderSource(s, src);
+            gl.compileShader(s);
+            if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+                console.error(gl.getShaderInfoLog(s));
+                return null;
+            }
+            return s;
+        }
+
+        const vs = compileShader(vsSource, gl.VERTEX_SHADER);
+        const fs = compileShader(fsSource, gl.FRAGMENT_SHADER);
+        const program = gl.createProgram();
+        gl.attachShader(program, vs);
+        gl.attachShader(program, fs);
+        gl.linkProgram(program);
+        gl.useProgram(program);
+
+        const quad = new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]);
+        const buf = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+        gl.bufferData(gl.ARRAY_BUFFER, quad, gl.STATIC_DRAW);
+
+        const posLoc = gl.getAttribLocation(program, 'position');
+        gl.enableVertexAttribArray(posLoc);
+        gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
+
+        const uRes = gl.getUniformLocation(program, 'u_resolution');
+        const uTime = gl.getUniformLocation(program, 'u_time');
+        const uMouse = gl.getUniformLocation(program, 'u_mouse');
+        const uZoom = gl.getUniformLocation(program, 'u_zoom');
+        const uRoughness = gl.getUniformLocation(program, 'u_roughness');
+        const uShipPos = gl.getUniformLocation(program, 'u_ship_pos');
+        const uShipRot = gl.getUniformLocation(program, 'u_ship_rot');
+        const uShipSpeed = gl.getUniformLocation(program, 'u_ship_speed');
+
+        let mouseX = 0.5, mouseY = 0.5;
+        let targetMouseX = 0.5, targetMouseY = 0.5;
+        let isMouseDown = false;
+        let zoom = 0.0;
+
+        // Contrôles Mer
+        const roughnessInput = document.getElementById('roughness');
+        const roughnessLabel = document.getElementById('roughness-label');
+        let currentRoughness = parseFloat(roughnessInput.value);
+
+        function updateRoughnessLabel(val) {
+            if (val < 0.4) roughnessLabel.textContent = "Mer d'huile";
+            else if (val < 0.75) roughnessLabel.textContent = "Calme";
+            else if (val < 1.25) roughnessLabel.textContent = "Forte houle";
+            else if (val < 1.7) roughnessLabel.textContent = "Mer agitée";
+            else roughnessLabel.textContent = "Tempête";
+        }
+
+        roughnessInput.addEventListener('input', (e) => {
+            currentRoughness = parseFloat(e.target.value);
+            updateRoughnessLabel(currentRoughness);
+        });
+        updateRoughnessLabel(currentRoughness);
+
+        // =========================================================================
+        // CONTRÔLES ET PHYSIQUE DU RADEAU DE SECOURS
+        // =========================================================================
+        const shipSpeedInput = document.getElementById('ship-speed');
+        const shipLabel = document.getElementById('ship-label');
+        const btnLeft = document.getElementById('btn-left');
+        const btnStop = document.getElementById('btn-stop');
+        const btnRight = document.getElementById('btn-right');
+
+        let raftTargetSpeed = 0.0;
+        let raftActualSpeed = 0.0;
+        let raftTurnRate = 0.0; // Vitesse angulaire de rotation libre
+
+        // Position monde du radeau (départ au milieu de la baie)
+        let raftX = 0.0;
+        let raftZ = 5.0;
+        let raftYaw = 0.0;      // Cap / Orientation libre (axe vertical Y uniquement)
+
+        function updateRaftLabel(speed, turn) {
+            if (Math.abs(speed) < 0.04 && Math.abs(turn) < 0.04) {
+                shipLabel.textContent = "🛟 Dérive calme";
+                shipLabel.style.color = "#f39c12";
+            } else if (Math.abs(turn) > 0.1) {
+                const dir = turn < 0 ? "↺ Rotation Gauche" : "↻ Rotation Droite";
+                shipLabel.textContent = dir;
+                shipLabel.style.color = "#00f0ff";
+            } else if (speed < 0) {
+                const knots = Math.round(Math.abs(speed) * 8);
+                shipLabel.textContent = `Recul (${knots} nds)`;
+                shipLabel.style.color = "#e67e22";
+            } else {
+                const knots = Math.round(speed * 8);
+                shipLabel.textContent = `Propulsion (${knots} nds) ⬆`;
+                shipLabel.style.color = "#2ecc71";
+            }
+        }
+
+        shipSpeedInput.addEventListener('input', (e) => {
+            raftTargetSpeed = parseFloat(e.target.value);
+            updateRaftLabel(raftTargetSpeed, raftTurnRate);
+        });
+
+        btnLeft.addEventListener('click', () => {
+            raftTurnRate = -1.2;
+            updateRaftLabel(raftTargetSpeed, raftTurnRate);
+        });
+        btnStop.addEventListener('click', () => {
+            raftTargetSpeed = 0.0;
+            raftTurnRate = 0.0;
+            shipSpeedInput.value = "0.0";
+            updateRaftLabel(0.0, 0.0);
+        });
+        btnRight.addEventListener('click', () => {
+            raftTurnRate = 1.2;
+            updateRaftLabel(raftTargetSpeed, raftTurnRate);
+        });
+
+        // Contrôles clavier (Flèches gauche/droite pour rotation, haut/bas pour avancer, Espace pour stopper)
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'q' || e.key === 'Q' || e.key === 'a' || e.key === 'A') {
+                raftTurnRate = Math.max(-2.0, raftTurnRate - 0.4);
+                updateRaftLabel(raftTargetSpeed, raftTurnRate);
+            } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+                raftTurnRate = Math.min(2.0, raftTurnRate + 0.4);
+                updateRaftLabel(raftTargetSpeed, raftTurnRate);
+            } else if (e.key === 'ArrowUp' || e.key === 'z' || e.key === 'Z' || e.key === 'w' || e.key === 'W') {
+                raftTargetSpeed = Math.min(1.0, raftTargetSpeed + 0.2);
+                shipSpeedInput.value = raftTargetSpeed.toFixed(2);
+                updateRaftLabel(raftTargetSpeed, raftTurnRate);
+            } else if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+                raftTargetSpeed = Math.max(-1.0, raftTargetSpeed - 0.2);
+                shipSpeedInput.value = raftTargetSpeed.toFixed(2);
+                updateRaftLabel(raftTargetSpeed, raftTurnRate);
+            } else if (e.key === ' ') {
+                raftTargetSpeed = 0.0;
+                raftTurnRate = 0.0;
+                shipSpeedInput.value = "0.0";
+                updateRaftLabel(0.0, 0.0);
+            }
+        });
+
+        // Calcul simplifié de la hauteur de houle pour la flottaison physique
+        function getWaveHeight(x, z, time, roughness) {
+            const freq = 0.13;
+            const amp = 1.05 * roughness;
+            const speed = 0.65 + (roughness - 0.2) * 0.33;
+            const t = time * speed;
+            // Approximation de la houle principale
+            const w1 = Math.sin((x * 0.92 - z * 0.38) * freq + 0.88 * t * 1.05);
+            const w2 = Math.sin((x * 0.38 + z * 0.92) * freq * 1.15 - 0.58 * t * 0.90);
+            return (w1 + w2) * amp * 0.45;
+        }
+
+        window.addEventListener('mousedown', (e) => {
+            if (!e.target.closest('#header')) isMouseDown = true;
+        });
+        window.addEventListener('mouseup', () => isMouseDown = false);
+        window.addEventListener('mousemove', (e) => {
+            if (isMouseDown) {
+                targetMouseX = e.clientX / window.innerWidth;
+                targetMouseY = e.clientY / window.innerHeight;
+            }
+        });
+        window.addEventListener('wheel', (e) => {
+            zoom += e.deltaY * 0.0025;
+            zoom = Math.max(-1.8, Math.min(zoom, 5.0));
+        });
+
+        function resize() {
+            const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+            const w = Math.floor(window.innerWidth * dpr);
+            const h = Math.floor(window.innerHeight * dpr);
+            if (canvas.width !== w || canvas.height !== h) {
+                canvas.width = w;
+                canvas.height = h;
+                gl.viewport(0, 0, w, h);
+                document.getElementById('res').textContent = `${w}x${h}`;
+            }
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        let lastTime = performance.now();
+        let lastFrameTime = performance.now();
+        let frameCount = 0;
+        const fpsEl = document.getElementById('fps');
+
+        function render(timeMs) {
+            const t = timeMs * 0.001;
+            const dt = Math.min(Math.max((timeMs - lastFrameTime) * 0.001, 0.0), 0.1);
+            lastFrameTime = timeMs;
+
+            frameCount++;
+            if (timeMs - lastTime >= 1000) {
+                const fps = Math.round((frameCount * 1000) / (timeMs - lastTime));
+                fpsEl.textContent = `FPS: ${fps}`;
+                frameCount = 0;
+                lastTime = timeMs;
+            }
+
+            mouseX += (targetMouseX - mouseX) * 0.07;
+            mouseY += (targetMouseY - mouseY) * 0.07;
+
+            // =================================================================
+            // PHYSIQUE & NAVIGATION DU RADEAU DE SECOURS
+            // =================================================================
+            // Inertie de vitesse et de rotation
+            raftActualSpeed += (raftTargetSpeed - raftActualSpeed) * (dt * 2.5);
+            
+            // Rotation libre sur l'axe vertical (yaw uniquement)
+            raftYaw += raftTurnRate * dt;
+            // Amortissement progressif de la rotation libre si les commandes ne sont pas maintenues
+            raftTurnRate *= Math.max(0.0, 1.0 - dt * 0.8);
+
+            // Déplacement selon l'orientation (cap) du radeau
+            const moveVecX = Math.sin(raftYaw) * raftActualSpeed * dt * 3.8;
+            const moveVecZ = Math.cos(raftYaw) * raftActualSpeed * dt * 3.8;
+            
+            raftX += moveVecX;
+            raftZ += moveVecZ;
+            
+            // Limites dans la baie
+            if (raftX > 20.0) raftX = -20.0;
+            if (raftX < -20.0) raftX = 20.0;
+            if (raftZ > 20.0) raftZ = 20.0;
+            if (raftZ < 0.0) raftZ = 0.0;
+
+            // Flottaison sur la houle (hauteur verticale sans tangage ni roulis complexe)
+            const waveY = getWaveHeight(raftX, raftZ, t, currentRoughness);
+            const raftY = waveY + 0.25;
+
+            // Envoi des uniformes WebGL (u_ship_rot : rotation sur axe vertical uniquement, pitch=0, roll=0)
+            gl.uniform2f(uRes, canvas.width, canvas.height);
+            gl.uniform1f(uTime, t);
+            gl.uniform2f(uMouse, mouseX, mouseY);
+            gl.uniform1f(uZoom, zoom);
+            gl.uniform1f(uRoughness, currentRoughness);
+
+            gl.uniform3f(uShipPos, raftX, raftY, raftZ);
+            gl.uniform3f(uShipRot, raftYaw, 0.0, 0.0);
+            gl.uniform1f(uShipSpeed, raftActualSpeed);
+
+            gl.drawArrays(gl.TRIANGLES, 0, 6);
+            requestAnimationFrame(render);
+        }
+        requestAnimationFrame(render);
+    </script>
+</body>
+</html>
