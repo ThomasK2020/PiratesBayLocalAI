@@ -71,6 +71,9 @@ Créez ou mettez à jour votre fichier de configuration OpenCode hôte :
 PiratesBayLocalAI/
 ├── README.md                  <- Guide d'installation et documentation
 ├── check-environment.sh       <- Script de vérification de l'environnement système
+├── documentation/
+│   ├── HOWTO_CHECK_AND_LAUNCH.md  <- Guide pas à pas d'installation & démo (FR / EN)
+│   └── Troubleshooting-errors.md  <- Guide de diagnostic & résolution des erreurs IA
 ├── AGENTS.md                  <- Consignes et règles pour OpenCode / Hermes Agent
 ├── Dockerfile                 <- Python 3.11-slim + Node.js 20 LTS + Git/Curl
 ├── docker-compose.yml         <- Configuration du conteneur sandbox bridé
