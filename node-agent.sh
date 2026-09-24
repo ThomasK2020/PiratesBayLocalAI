@@ -7,6 +7,7 @@ set -u
 
 NODE_STATUS_FILE="/tmp/pirates_bay_node_status.json"
 LEMONADE_URL="${LEMONADE_URL:-http://localhost:13305/v1/models}"
+LOG_FILE="documentation/Node-Troubleshooting-error.md"
 
 # Function: Generate Health Report
 get_health_json() {
@@ -30,6 +31,55 @@ get_health_json() {
   "opencode_config": $opencode_config_ok
 }
 EOF
+}
+
+# Function: Log Node Error with Metadata (Date, Hostname, User)
+log_error() {
+    local err_msg="${1:-Unspecified error}"
+    local do_push="${2:-}"
+    local date_iso="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+    local date_human="$(date +"%Y-%m-%d %H:%M:%S %Z")"
+    local node_host="$(hostname)"
+    local current_user="${USER:-$(whoami)}"
+
+    mkdir -p documentation
+
+    if [ ! -f "$LOG_FILE" ]; then
+        cat << 'EOF_HEADER' > "$LOG_FILE"
+# Node Troubleshooting & Remote Error Logs — Pirates Bay Local AI
+
+Journal centralisé des erreurs rapportées par les nœuds distants.
+
+---
+
+## 📝 Historique des Erreurs Rapportées par les Nœuds
+
+EOF_HEADER
+    fi
+
+    cat << EOF_ENTRY >> "$LOG_FILE"
+
+### 🚨 [${date_human}] Node: ${node_host} (User: ${current_user})
+
+* **Date & Heure :** \`${date_iso}\`
+* **Machine (Hostname) :** \`${node_host}\`
+* **Utilisateur :** \`${current_user}\`
+* **Message / Rapport d'Erreur :**
+\`\`\`text
+${err_msg}
+\`\`\`
+
+---
+EOF_ENTRY
+
+    echo "[LOG] Erreur consignée dans ${LOG_FILE} pour ${node_host} (${current_user})"
+
+    if [ "$do_push" = "--push" ] || [ "${3:-}" = "--push" ]; then
+        echo "[GIT] Publication automatique sur GitHub..."
+        git add "$LOG_FILE"
+        git commit -m "log: error report from ${node_host} (${current_user})" 2>/dev/null || true
+        git push origin main || echo "[GIT WARN] Push échoué — vérifiez l'authentification Git"
+    fi
 }
 
 # Function: Auto-Fix Identified Errors
@@ -80,6 +130,9 @@ case "${1:-status}" in
     --fix|fix)
         auto_fix
         ;;
+    --log-error|log-error)
+        log_error "${2:-"Erreur non spécifiée"}" "${3:-}"
+        ;;
     --daemon|daemon)
         echo "Starting Node Agent Daemon..."
         while true; do
@@ -88,7 +141,7 @@ case "${1:-status}" in
         done
         ;;
     *)
-        echo "Usage: $0 [--status | --fix | --daemon]"
+        echo "Usage: $0 [--status | --fix | --log-error \"message\" [--push] | --daemon]"
         exit 1
         ;;
 esac
