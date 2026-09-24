@@ -127,6 +127,11 @@ if [ "$MODE" = "demo" ]; then
     DEMO_PROFILE_DIR="${HOME}/.hermes/profiles/LocalAIDemo"
     mkdir -p "${DEMO_PROFILE_DIR}"
 
+    # Link technical skills to demo profile without copying personal memories
+    if [ ! -e "${DEMO_PROFILE_DIR}/skills" ] && [ -d "${HOME}/.hermes/skills" ]; then
+        ln -s "${HOME}/.hermes/skills" "${DEMO_PROFILE_DIR}/skills" 2>/dev/null || true
+    fi
+
     # Deploy minimal demo config
     cat << 'EOF_CONFIG' > "${DEMO_PROFILE_DIR}/config.yaml"
 model:
