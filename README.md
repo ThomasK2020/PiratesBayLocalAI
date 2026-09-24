@@ -48,20 +48,34 @@ Le conteneur `pirates-bay-sandbox` démarrera en arrière-plan avec le volume `.
 Créez ou mettez à jour votre fichier de configuration OpenCode hôte :
 ```json
 {
-  "$schema": "https://opencode.ai/config.schema.json",
-  "provider": "openai",
-  "options": {
-    "baseURL": "http://localhost:13305/v1",
-    "apiKey": "lemonade",
-    "model": "Qwen3-Coder-30B-A3B-Instruct-GGUF"
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "lemonade": {
+      "npm": "@ai-sdk/openai",
+      "options": {
+        "baseURL": "http://127.0.0.1:13305/v1",
+        "apiKey": "lemonade"
+      },
+      "models": {
+        "Qwen3-Coder-30B-A3B-Instruct-GGUF": {
+          "name": "Qwen3-Coder-30B-A3B-Instruct-GGUF"
+        }
+      },
+      "name": "Lemonade Local"
+    }
   },
-  "execution": {
-    "approval": "auto",
-    "timeout": 300
-  }
+  "model": "lemonade/Qwen3-Coder-30B-A3B-Instruct-GGUF"
 }
 ```
-*(Remarque : Pour un serveur vLLM distant/dédié, remplacez `baseURL` par `http://<IP_SERVEUR>:8000/v1`).*
+
+### Step 4 : Lancer la Session de Livecoding (`launch-dev.sh`)
+```bash
+# Lancement interactif (choix entre profil Démo neutre ou profil Perso) :
+./launch-dev.sh
+
+# Lancement direct en Démo avec ouverture 3D GPU AMD dans Chrome :
+./launch-dev.sh --demo --chrome
+```
 
 ---
 

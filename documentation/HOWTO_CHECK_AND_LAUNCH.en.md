@@ -2,90 +2,58 @@
 
 [🇬🇧 English Version](HOWTO_CHECK_AND_LAUNCH.en.md) | [🇫🇷 Version Française](HOWTO_CHECK_AND_LAUNCH.fr.md)
 
-Complete guide to verify the local environment and deploy the **Pirates Bay Local AI** project from scratch on any Linux workstation.
+Comprehensive guide to verify the local environment and deploy **Pirates Bay Local AI** from scratch on any Linux workstation.
 
 ---
 
-## 📋 1. Local Environment Pre-checks
+## 📋 1. System Pre-Check
 
-Run the following checks before starting:
-
-### A. LLM Inference Engine (Lemonade / vLLM)
-```bash
-# Check Lemonade server status and Qwen Coder model presence
-curl -s http://localhost:13305/v1/models | grep -i "Qwen"
-```
-*Expected output: Presence of model `Qwen3-Coder-30B-A3B-Instruct-GGUF`.*
-
-### B. Containerization (Docker & Compose)
-```bash
-docker info && docker compose version
-```
-*Expected output: Active Docker daemon and Compose v2 available.*
-
-### C. AI Agent Tools (OpenCode CLI & Hermes)
-```bash
-opencode --version && hermes --version
-```
-
----
-
-## 🌐 2. Use Case 1: Launch Web Application (UI View)
-
-To deploy and display the web application directly in a browser:
-
-1. **Clone the project:**
-   ```bash
-   git clone https://github.com/ThomasK2020/PiratesBayLocalAI.git
-   cd PiratesBayLocalAI
-   ```
-
-2. **Start local web server:**
-   ```bash
-   python3 -m http.server 8080
-   ```
-
-3. **Access application:**
-   Open `http://localhost:8080/pirates_bay_caribbean.html` in Chrome or Firefox.
-
----
-
-## 🤖 3. Use Case 2: Live-Coding Demo with Neutral Hermes
-
-To run an AI development demo without impacting your personal Hermes session or memory:
-
-### Step 1: Start Docker Sandbox (4GB RAM Cgroups Limit)
+Run the automated diagnostic check:
 ```bash
 cd PiratesBayLocalAI
-docker compose up -d
+./check-environment.sh
 ```
 
-### Step 2: Configure OpenCode CLI (`~/.config/opencode/config.json`)
-```json
-{
-  "provider": "openai",
-  "options": {
-    "baseURL": "http://localhost:13305/v1",
-    "apiKey": "lemonade",
-    "model": "Qwen3-Coder-30B-A3B-Instruct-GGUF"
-  },
-  "execution": {
-    "approval": "auto",
-    "timeout": 300
-  }
-}
-```
+Or manually verify:
+* **Lemonade LLM Inference :** `curl -s http://localhost:13305/v1/models | grep -i "Qwen"`
+* **Docker Daemon & Compose :** `docker info && docker compose version`
+* **AI Tooling :** `opencode --version && hermes --version`
 
-### Step 3: Start a Neutral Hermes Session (Demo Profile)
+---
+
+## 🚀 2. All-in-One Launcher (`launch-dev.sh`)
+
+The repository includes `launch-dev.sh` to configure the environment, start the Docker sandbox (4 GB RAM limit), and let you select your Hermes profile:
+
 ```bash
-# Launch under a fresh profile with no personal history or keys
-hermes --profile demo
-```
-*Alternative using OpenCode CLI directly:*
-```bash
-opencode
+# Interactive mode (Demo / Personal profile menu):
+./launch-dev.sh
+
+# Direct Demo mode (clean profile, no personal memories/data):
+./launch-dev.sh --demo
+
+# Direct Personal mode (full personal memories and skills):
+./launch-dev.sh --perso
+
+# Open 3D scene in Google Chrome with AMD GPU hardware acceleration:
+./launch-dev.sh --demo --chrome
 ```
 
-### Step 4: Demo Prompt
-Give the instruction to the agent:
-> *"Read `AGENTS.md`. Prototype and test your changes exclusively inside `./workspace`."*
+---
+
+## 🌐 3. Visual 3D Demo (WebGL & GPU Acceleration)
+
+Open and render the 3D pirate galleon with native AMD GPU acceleration:
+```bash
+google-chrome --ozone-platform=x11 --ignore-gpu-blocklist --enable-features=Vulkan,DefaultANGLEVulkan --use-gl=angle --use-angle=vulkan pirates_bay_caribbean.html
+```
+*Whenever code changes are made, hit `F5` in Chrome to reload instantly.*
+
+---
+
+## 🤖 4. Livecoding Driven by Hermes & OpenCode
+
+1. **In Hermes Agent:**
+   Direct the agent to implement or test features.
+2. **Isolated Docker Execution:**
+   Scripts and tests in `./workspace` run inside the container with cgroups protection, ensuring Lemonade's RAM/VRAM is preserved.

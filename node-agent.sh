@@ -107,17 +107,23 @@ auto_fix() {
         mkdir -p "$HOME/.config/opencode"
         cat << 'EOF_OC' > "$HOME/.config/opencode/config.json"
 {
-  "$schema": "https://opencode.ai/config.schema.json",
-  "provider": "openai",
-  "options": {
-    "baseURL": "http://localhost:13305/v1",
-    "apiKey": "lemonade",
-    "model": "Qwen3-Coder-30B-A3B-Instruct-GGUF"
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "lemonade": {
+      "npm": "@ai-sdk/openai",
+      "options": {
+        "baseURL": "http://127.0.0.1:13305/v1",
+        "apiKey": "lemonade"
+      },
+      "models": {
+        "Qwen3-Coder-30B-A3B-Instruct-GGUF": {
+          "name": "Qwen3-Coder-30B-A3B-Instruct-GGUF"
+        }
+      },
+      "name": "Lemonade Local"
+    }
   },
-  "execution": {
-    "approval": "auto",
-    "timeout": 300
-  }
+  "model": "lemonade/Qwen3-Coder-30B-A3B-Instruct-GGUF"
 }
 EOF_OC
     fi

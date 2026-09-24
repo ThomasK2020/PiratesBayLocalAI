@@ -9,7 +9,7 @@ Spécifications d'installation et de déploiement pour le schéma hybride d'assi
 
 ```text
                ┌──────────────────────────────────────────────┐
-               │    Hermes Agent (Profil: LocalAIDemo)        │
+               │    Hermes Agent (Choix: Demo ou Perso)       │
                │   Discussion & Réflexion ➔ Gemini API       │
                └──────────────────────┬───────────────────────┘
                                       │
@@ -31,66 +31,76 @@ Spécifications d'installation et de déploiement pour le schéma hybride d'assi
 
 ## 🛠️ Spécifications & Prérequis
 
-* **Moteur d'Inférence Local :** Lemonade (`http://localhost:13305/v1`)
+* **Moteur d'Inférence Local :** Lemonade (`http://localhost:13305/v1` ou `13306`)
 * **Modèle LLM Code Local :** `Qwen3-Coder-30B-A3B-Instruct-GGUF`
-* **Modèle Brain / Discussion :** `gemini-2.5-flash`
+* **Modèle Brain / Discussion :** `gemini-2.5-flash` / `gemini-3.7-flash`
 * **Agent CLI :** Hermes Agent + OpenCode CLI
-* **Isolation :** Profil Hermes dédié `LocalAIDemo` + Conteneur Docker `pirates-bay-sandbox`
+* **Isolation :** Choix entre Profil Démo (`LocalAIDemo`) et Profil Personnel (`default`) + Conteneur Docker `pirates-bay-sandbox`
 
 ---
 
-## ⚙️ Procédure d'Installation Pas à Pas
+## ⚙️ Procédure de Configuration Pas à Pas
 
 ### Step 1 : Configurer OpenCode CLI pour Qwen Coder Local
 Fichier de configuration hôte `~/.config/opencode/config.json` :
 ```json
 {
-  "$schema": "https://opencode.ai/config.schema.json",
-  "provider": "openai",
-  "options": {
-    "baseURL": "http://localhost:13305/v1",
-    "apiKey": "lemonade",
-    "model": "Qwen3-Coder-30B-A3B-Instruct-GGUF"
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "lemonade": {
+      "npm": "@ai-sdk/openai",
+      "options": {
+        "baseURL": "http://127.0.0.1:13305/v1",
+        "apiKey": "lemonade"
+      },
+      "models": {
+        "Qwen3-Coder-30B-A3B-Instruct-GGUF": {
+          "name": "Qwen3-Coder-30B-A3B-Instruct-GGUF"
+        }
+      },
+      "name": "Lemonade Local"
+    }
   },
-  "execution": {
-    "approval": "auto",
-    "timeout": 300
-  }
+  "model": "lemonade/Qwen3-Coder-30B-A3B-Instruct-GGUF"
 }
 ```
 
-### Step 2 : Configurer le Profil Hermes `LocalAIDemo`
-Créez l'arborescence du profil Hermes :
+### Step 2 : Gestion des Profils Hermes (Démo vs Perso)
+
+Vous pouvez lancer Hermes dans deux modes distincts :
+
+1. **Mode Démo (`LocalAIDemo`) — Neutre & Sans données personnelles :**
+   - Aucune mémoire personnelle ni historique privé injecté.
+   - Idéal pour les présentations, cours ou tests sans compromettre la vie privée.
+   - Emplacement : `~/.hermes/profiles/LocalAIDemo/`
+
+2. **Mode Perso (`Default`) — Environnement Complet :**
+   - Accès direct à vos mémoires, skills personnalisés et base `state.db`.
+   - Idéal pour le développement continu personnel.
+
+---
+
+## 🚀 Script de Lancement Tout-en-un (`launch-dev.sh`)
+
+Le script `launch-dev.sh` permet de tout démarrer et gère le choix du profil :
+
 ```bash
-mkdir -p ~/.hermes/profiles/LocalAIDemo
-```
+# 1. Mode Démo (Profil neutre sans mémoires perso)
+./launch-dev.sh --demo
 
-Fichier `~/.hermes/profiles/LocalAIDemo/config.yaml` :
-```yaml
-model: gemini-2.5-flash
-provider: gemini
-```
+# 2. Mode Perso (Profil par défaut avec données perso)
+./launch-dev.sh --perso
 
-Fichier `~/.hermes/profiles/LocalAIDemo/.env` :
-```env
-GEMINI_API_KEY="votre_cle_gemini_ici"
+# 3. Lancement interactif (menu de sélection)
+./launch-dev.sh
+
+# 4. Avec ouverture automatique de la page 3D dans Chrome (GPU AMD) :
+./launch-dev.sh --demo --chrome
 ```
 
 ---
 
-## 🚀 Utilisation en Démo
+## 💡 Exemple de Consigne Livecoding pour Hermes
 
-1. **Lancer la Sandbox Docker du projet :**
-   ```bash
-   cd PiratesBayLocalAI
-   docker compose up -d
-   ```
-
-2. **Démarrer Hermes sous le profil `LocalAIDemo` :**
-   ```bash
-   hermes --profile LocalAIDemo
-   ```
-
-3. **Consigne de Démo :**
-   Exemple de prompt utilisateur pour l'agent :
-   > *"Lis `AGENTS.md`. Utilise OpenCode pour générer et tester le code de la fonctionnalité X uniquement dans `./workspace`."*
+Une fois dans la session Hermes :
+> *"Lis `AGENTS.md`. Utilise OpenCode pour générer et tester le code de la fonctionnalité X dans `./workspace`. Vérifie ensuite les tests dans le conteneur Docker."*
