@@ -30,10 +30,12 @@ Le projet **Pirates Bay Local AI** fournit une sandbox de développement isolée
 
 ## 💻 Configuration & Installation
 
-### Step 1 : Cloner le dépôt
+### Step 1 : Cloner le dépôt et vérifier l'environnement
 ```bash
 git clone https://github.com/ThomasK2020/PiratesBayLocalAI.git
 cd PiratesBayLocalAI
+chmod +x check-environment.sh
+./check-environment.sh
 ```
 
 ### Step 2 : Lancer le conteneur Sandbox Docker
@@ -68,6 +70,7 @@ Créez ou mettez à jour votre fichier de configuration OpenCode hôte :
 ```text
 PiratesBayLocalAI/
 ├── README.md                  <- Guide d'installation et documentation
+├── check-environment.sh       <- Script de vérification de l'environnement système
 ├── AGENTS.md                  <- Consignes et règles pour OpenCode / Hermes Agent
 ├── Dockerfile                 <- Python 3.11-slim + Node.js 20 LTS + Git/Curl
 ├── docker-compose.yml         <- Configuration du conteneur sandbox bridé
