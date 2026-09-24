@@ -14,6 +14,9 @@ NC='\033[0m' # No Color
 ERRORS=0
 WARNINGS=0
 
+# Include common local binary directories in PATH for check
+export PATH="$HOME/.local/bin:$HOME/.opencode/bin:$HOME/.hermes/bin:$HOME/.hermes/hermes-agent/bin:$HOME/.npm-global/bin:$PATH"
+
 echo -e "${BLUE}=====================================================${NC}"
 echo -e "${BLUE}   PiratesBayLocalAI — System Pre-Check Script       ${NC}"
 echo -e "${BLUE}=====================================================${NC}"
@@ -80,8 +83,10 @@ rm -f /tmp/lemonade_models.json
 echo -n "[CHECK] OpenCode CLI ... "
 if command -v opencode &>/dev/null; then
     echo -e "${GREEN}OK${NC} ($(opencode --version 2>/dev/null || echo 'Installed'))"
+elif [ -f "$HOME/.local/bin/opencode" ] || [ -f "$HOME/.opencode/bin/opencode" ]; then
+    echo -e "${GREEN}OK${NC} (Found in ~/.local/bin or ~/.opencode/bin — PATH update recommended)"
 else
-    echo -e "${YELLOW}WARN${NC} (opencode CLI not found in PATH)"
+    echo -e "${YELLOW}WARN${NC} (opencode CLI not found. Install via: npm i -g opencode-ai or curl -fsSL https://opencode.ai/install.sh | bash)"
     ((WARNINGS++))
 fi
 
@@ -89,15 +94,17 @@ echo -n "[CHECK] OpenCode Host Config (~/.config/opencode/config.json) ... "
 if [ -f "$HOME/.config/opencode/config.json" ]; then
     echo -e "${GREEN}OK${NC}"
 else
-    echo -e "${YELLOW}WARN${NC} (File ~/.config/opencode/config.json missing — copy from README.md)"
+    echo -e "${YELLOW}WARN${NC} (File ~/.config/opencode/config.json missing — run ./node-agent.sh --fix to generate)"
     ((WARNINGS++))
 fi
 
 echo -n "[CHECK] Hermes Agent CLI ... "
 if command -v hermes &>/dev/null; then
     echo -e "${GREEN}OK${NC} ($(hermes --version 2>/dev/null || echo 'Installed'))"
+elif [ -f "$HOME/.local/bin/hermes" ] || [ -f "$HOME/.hermes/hermes-agent/bin/hermes" ]; then
+    echo -e "${GREEN}OK${NC} (Found in ~/.local/bin or ~/.hermes — PATH update recommended)"
 else
-    echo -e "${YELLOW}WARN${NC} (hermes CLI not found in PATH)"
+    echo -e "${YELLOW}WARN${NC} (hermes CLI not found. Install via: curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash)"
     ((WARNINGS++))
 fi
 

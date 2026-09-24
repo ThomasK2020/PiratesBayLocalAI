@@ -11,6 +11,8 @@ LOG_FILE="documentation/Node-Troubleshooting-error.md"
 
 # Function: Generate Health Report
 get_health_json() {
+    export PATH="$HOME/.local/bin:$HOME/.opencode/bin:$HOME/.hermes/bin:$HOME/.hermes/hermes-agent/bin:$HOME/.npm-global/bin:$PATH"
+
     local docker_ok=false
     local lemonade_ok=false
     local model_ok=false
@@ -86,13 +88,20 @@ EOF_ENTRY
 auto_fix() {
     echo "=== Auto-Healing Process Started on $(hostname) ==="
     
-    # Fix 1: Docker
+    # Fix 1: PATH Environment export in ~/.bashrc
+    if ! grep -q ".local/bin" "$HOME/.bashrc" 2>/dev/null; then
+        echo "[FIX] Adding ~/.local/bin and local AI bin paths to ~/.bashrc..."
+        echo 'export PATH="$HOME/.local/bin:$HOME/.opencode/bin:$HOME/.hermes/bin:$HOME/.npm-global/bin:$PATH"' >> "$HOME/.bashrc"
+    fi
+    export PATH="$HOME/.local/bin:$HOME/.opencode/bin:$HOME/.hermes/bin:$HOME/.hermes/hermes-agent/bin:$HOME/.npm-global/bin:$PATH"
+
+    # Fix 2: Docker
     if ! docker info &>/dev/null; then
         echo "[FIX] Starting Docker service..."
         sudo systemctl enable --now docker 2>/dev/null || true
     fi
 
-    # Fix 2: OpenCode Config
+    # Fix 3: OpenCode Config
     if [ ! -f "$HOME/.config/opencode/config.json" ]; then
         echo "[FIX] Creating missing ~/.config/opencode/config.json..."
         mkdir -p "$HOME/.config/opencode"
@@ -113,7 +122,7 @@ auto_fix() {
 EOF_OC
     fi
 
-    # Fix 3: Lemonade Server
+    # Fix 4: Lemonade Server
     if ! curl -s "$LEMONADE_URL" &>/dev/null; then
         echo "[FIX] Restarting Lemonade service..."
         sudo systemctl restart lemonade.service 2>/dev/null || true
