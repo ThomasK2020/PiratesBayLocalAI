@@ -91,11 +91,11 @@ auto_fix() {
     # Fix 1: PATH Environment export in ~/.bashrc
     if ! grep -q ".local/bin" "$HOME/.bashrc" 2>/dev/null; then
         echo "[FIX] Adding ~/.local/bin and local AI bin paths to ~/.bashrc..."
-        echo 'export PATH="$HOME/.local/bin:$HOME/.opencode/bin:$HOME/.hermes/bin:$HOME/.npm-global/bin:$PATH"' >> "$HOME/.bashrc"
+        echo 'export PATH="$HOME/.local/bin:$HOME/.opencode/bin:$HOME/.hermes/bin:$HOME/.hermes/hermes-agent/bin:$HOME/.npm-global/bin:$PATH"' >> "$HOME/.bashrc"
     fi
     export PATH="$HOME/.local/bin:$HOME/.opencode/bin:$HOME/.hermes/bin:$HOME/.hermes/hermes-agent/bin:$HOME/.npm-global/bin:$PATH"
 
-    # Fix 2: Docker
+    # Fix 2: Docker Daemon
     if ! docker info &>/dev/null; then
         echo "[FIX] Starting Docker service..."
         sudo systemctl enable --now docker 2>/dev/null || true
@@ -126,6 +126,18 @@ EOF_OC
     if ! curl -s "$LEMONADE_URL" &>/dev/null; then
         echo "[FIX] Restarting Lemonade service..."
         sudo systemctl restart lemonade.service 2>/dev/null || true
+    fi
+
+    # Fix 5: OpenCode CLI Installation
+    if ! command -v opencode &>/dev/null && [ ! -f "$HOME/.local/bin/opencode" ] && [ ! -f "$HOME/.opencode/bin/opencode" ]; then
+        echo "[FIX] Installing OpenCode CLI..."
+        curl -fsSL https://opencode.ai/install.sh | bash 2>/dev/null || npm i -g opencode-ai 2>/dev/null || true
+    fi
+
+    # Fix 6: Hermes Agent CLI Installation
+    if ! command -v hermes &>/dev/null && [ ! -f "$HOME/.local/bin/hermes" ] && [ ! -f "$HOME/.hermes/hermes-agent/bin/hermes" ]; then
+        echo "[FIX] Installing Hermes Agent CLI..."
+        curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash 2>/dev/null || true
     fi
 
     echo "=== Auto-Healing Process Complete ==="
