@@ -59,3 +59,27 @@ Journal centralisé des erreurs rapportées par les nœuds distants via `./node-
 ```
 
 ---
+
+### 🚨 [2026-09-24 12:52:23 CEST] Node: HP-Z2-Mini-G1a-Workstation-Desktop-PC (User: hp-amd-localai)
+
+* **Date & Heure :** `2026-09-24T10:52:23Z`
+* **Machine (Hostname) :** `HP-Z2-Mini-G1a-Workstation-Desktop-PC`
+* **Utilisateur :** `hp-amd-localai`
+* **Message / Rapport d'Erreur :**
+```text
+[CHECK] OpenCode CLI ... WARN (opencode CLI not found. Install via: npm i-gopencode-ai or curl -fsSL https://opencode.ai/install.sh | bash)[CHECK] OpenCode Host Config (~/.config/opencode/config.json) ... OK[CHECK] Hermes Agent CLI ... WARN (hermes CLI not found. Install via: curl-fsSL https://hermes-agent.nousresearch.com/install.sh | bash)
+```
+
+---
+
+### 🚨 [2026-09-24 12:52:45 CEST] Node: HP-Z2-Mini-G1a-Workstation-Desktop-PC (User: hp-amd-localai)
+
+* **Date & Heure :** `2026-09-24T10:52:45Z`
+* **Machine (Hostname) :** `HP-Z2-Mini-G1a-Workstation-Desktop-PC`
+* **Utilisateur :** `hp-amd-localai`
+* **Message / Rapport d'Erreur :**
+```text
+[CHECK] OpenCode CLI ... WARN (opencode CLI not found. Install via: npm i-gopencode-ai or curl -fsSL https://opencode.ai/install.sh | bash)[CHECK] OpenCode Host Config (~/.config/opencode/config.json) ... OK[CHECK] Hermes Agent CLI ... WARN (hermes CLI not found. Install via: curl-fsSL https://hermes-agent.nousresearch.com/install.sh | bash)
+```
+
+---
