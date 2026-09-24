@@ -10,9 +10,11 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "${SCRIPT_DIR}"
 
-MODE=""
+# Default mode is DEMO (LocalAIDemo)
+MODE="demo"
 OPEN_CHROME=false
 SKIP_DOCKER=false
+INTERACTIVE=false
 
 # 1. Parse Arguments
 while [[ $# -gt 0 ]]; do
@@ -23,6 +25,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --perso)
             MODE="perso"
+            shift
+            ;;
+        -i|--interactive)
+            INTERACTIVE=true
             shift
             ;;
         --chrome)
@@ -37,11 +43,12 @@ while [[ $# -gt 0 ]]; do
             echo "Usage: ./launch-dev.sh [OPTIONS]"
             echo ""
             echo "Options:"
-            echo "  --demo        Start Hermes under clean 'LocalAIDemo' profile (no personal data/memories)"
-            echo "  --perso       Start Hermes under default personal profile (full memories & skills)"
-            echo "  --chrome      Open pirates_bay_caribbean.html in Google Chrome with AMD GPU flags"
-            echo "  --no-docker   Skip Docker sandbox startup"
-            echo "  -h, --help    Show this help message"
+            echo "  --demo            Start Hermes under clean 'LocalAIDemo' profile (DEFAULT, no personal data)"
+            echo "  --perso           Start Hermes under default personal profile (full memories & skills)"
+            echo "  -i, --interactive Prompt interactively for profile selection"
+            echo "  --chrome          Open pirates_bay_caribbean.html in Google Chrome with AMD GPU flags"
+            echo "  --no-docker       Skip Docker sandbox startup"
+            echo "  -h, --help        Show this help message"
             exit 0
             ;;
         *)
@@ -56,11 +63,11 @@ echo "======================================================================"
 echo "🏴‍☠️  Pirates Bay Local AI — Livecoding & Agent Orchestrator"
 echo "======================================================================"
 
-# 2. Interactive Selection if Mode not provided via CLI
-if [ -z "$MODE" ]; then
+# 2. Optional Interactive Selection
+if [ "$INTERACTIVE" = true ]; then
     echo ""
     echo "Choisissez le profil Hermes Agent pour cette session :"
-    echo "  [1] Profil DÉMO (LocalAIDemo) — Session neutre, sans données perso ni mémoires"
+    echo "  [1] Profil DÉMO (LocalAIDemo) — Session neutre [PAR DÉFAUT]"
     echo "  [2] Profil PERSO (Default)   — Avec vos données, mémoires et compétences perso"
     echo ""
     read -r -p "Votre choix (1 ou 2) [défaut: 1]: " USER_CHOICE
@@ -73,6 +80,8 @@ if [ -z "$MODE" ]; then
             ;;
     esac
 fi
+
+echo "Mode actif : [Profil ${MODE^^}]"
 
 # 3. Verify Local LLM Endpoint & OpenCode Config
 echo ""
