@@ -71,6 +71,7 @@ Créez ou mettez à jour votre fichier de configuration OpenCode hôte :
 PiratesBayLocalAI/
 ├── README.md                  <- Guide d'installation et documentation
 ├── check-environment.sh       <- Script de vérification de l'environnement système
+├── node-agent.sh              <- Démon / Agent d'auto-réparation & pilotage distant
 ├── documentation/
 │   ├── HOWTO_CHECK_AND_LAUNCH.md  <- Guide pas à pas d'installation & démo (FR / EN)
 │   └── Troubleshooting-errors.md  <- Guide de diagnostic & résolution des erreurs IA
