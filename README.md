@@ -2,6 +2,22 @@
 
 Environnement de prototypage et de développement sécurisé, conteneurisé et orchestré pour l'assistance par IA locale (**OpenCode CLI**, **Hermes Agent** et **Qwen Coder**).
 
+### 🖥️ Lancement du Navigateur Chrome Autonome (Démo GNOME)
+Pour ouvrir la démo 3D dans une fenêtre Google Chrome autonome et indépendante sur le bureau GNOME :
+
+* **Mode Application (Recommandé - Sans barre d'adresse) :**
+  ```bash
+  DISPLAY=:0 google-chrome --app="file://$(pwd)/pirates_bay_caribbean.html" &
+  ```
+* **Mode Fenêtre Standard :**
+  ```bash
+  DISPLAY=:0 google-chrome --new-window "file://$(pwd)/pirates_bay_caribbean.html" &
+  ```
+* **Version Prototypée dans `./workspace` :**
+  ```bash
+  DISPLAY=:0 google-chrome --app="file://$(pwd)/workspace/pirates_bay_caribbean.html" &
+  ```
+
 ---
 
 ## 🚀 Vue d'ensemble

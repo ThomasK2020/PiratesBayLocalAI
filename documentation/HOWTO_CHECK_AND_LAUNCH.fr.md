@@ -43,9 +43,17 @@ Le projet fournit le script interactif `launch-dev.sh` qui configure l'environne
 
 ## 🌐 3. Visualisation de l'Application 3D (Rendu WebGL GPU)
 
-Pour ouvrir et visualiser la scène 3D du galion pirate avec accélération GPU AMD native :
+Pour ouvrir et visualiser la scène 3D dans une fenêtre Google Chrome autonome et indépendante sur le bureau GNOME :
+
 ```bash
-google-chrome --ozone-platform=x11 --ignore-gpu-blocklist --enable-features=Vulkan,DefaultANGLEVulkan --use-gl=angle --use-angle=vulkan pirates_bay_caribbean.html
+# Mode Application Autonome (Recommandé - Sans barre d'adresse) :
+DISPLAY=:0 google-chrome --app="file://$(pwd)/pirates_bay_caribbean.html" &
+
+# Mode Fenêtre Standard :
+DISPLAY=:0 google-chrome --new-window "file://$(pwd)/pirates_bay_caribbean.html" &
+
+# Version Prototypée dans ./workspace :
+DISPLAY=:0 google-chrome --app="file://$(pwd)/workspace/pirates_bay_caribbean.html" &
 ```
 *Dès qu'une modification de code est effectuée, rafraîchissez simplement la page (`F5`).*
 
