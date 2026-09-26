@@ -398,7 +398,9 @@
 
         vec3 worldToRaft(vec3 p) {
             vec3 q = p - u_ship_pos;
-            q.xz *= rot2D(-u_ship_rot.x); // Rotation sur axe vertical uniquement
+            q.xz *= rot2D(-u_ship_rot.x); // Yaw
+            q.yz *= rot2D(-u_ship_rot.y); // Pitch
+            q.xy *= rot2D(-u_ship_rot.z); // Roll
             return q;
         }
 
@@ -1053,11 +1055,22 @@
             if (raftZ > 20.0) raftZ = 20.0;
             if (raftZ < 0.0) raftZ = 0.0;
 
-            // Flottaison sur la houle (hauteur verticale sans tangage ni roulis complexe)
+            // Flottaison hydrodynamique sur la houle avec calcul du tangage (pitch) et du roulis (roll)
+            const waveDelta = 0.8;
             const waveY = getWaveHeight(raftX, raftZ, t, currentRoughness);
+            const waveY_pz = getWaveHeight(raftX, raftZ + waveDelta, t, currentRoughness);
+            const waveY_nz = getWaveHeight(raftX, raftZ - waveDelta, t, currentRoughness);
+            const waveY_px = getWaveHeight(raftX + waveDelta, raftZ, t, currentRoughness);
+            const waveY_nx = getWaveHeight(raftX - waveDelta, raftZ, t, currentRoughness);
+
+            const dz = (waveY_pz - waveY_nz) / (2.0 * waveDelta);
+            const dx = (waveY_px - waveY_nx) / (2.0 * waveDelta);
+
+            const raftPitch = Math.atan(-dz) * 0.7; // Tangage le long de la pente
+            const raftRoll = Math.atan(dx) * 0.7;   // Roulis le long de la pente
             const raftY = waveY + 0.25;
 
-            // Envoi des uniformes WebGL (u_ship_rot : rotation sur axe vertical uniquement, pitch=0, roll=0)
+            // Envoi des uniformes WebGL (u_ship_rot : [yaw, pitch, roll])
             gl.uniform2f(uRes, canvas.width, canvas.height);
             gl.uniform1f(uTime, t);
             gl.uniform2f(uMouse, mouseX, mouseY);
@@ -1065,7 +1078,7 @@
             gl.uniform1f(uRoughness, currentRoughness);
 
             gl.uniform3f(uShipPos, raftX, raftY, raftZ);
-            gl.uniform3f(uShipRot, raftYaw, 0.0, 0.0);
+            gl.uniform3f(uShipRot, raftYaw, raftPitch, raftRoll);
             gl.uniform1f(uShipSpeed, raftActualSpeed);
 
             gl.drawArrays(gl.TRIANGLES, 0, 6);
