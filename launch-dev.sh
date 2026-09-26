@@ -122,7 +122,7 @@ fi
 # 5. Open Chrome GPU if requested
 if [ "$OPEN_CHROME" = true ]; then
     echo ""
-    echo "[3/4] Démarrage du serveur HTTP local (Port 8888) & Lancement de Google Chrome (GPU AMD Vulkan)..."
+    echo "[3/4] Démarrage du serveur HTTP local (Port 8888) & Lancement de Google Chrome (GPU AMD OpenGL)..."
     if ! lsof -i :8888 >/dev/null 2>&1; then
         python3 -m http.server 8888 --directory "${SCRIPT_DIR}" >/dev/null 2>&1 &
         sleep 0.5
