@@ -214,7 +214,7 @@
 
     <script>
         const canvas = document.getElementById('glcanvas');
-        const gl = canvas.getContext('webgl2', { powerPreference: 'high-performance', antialias: false, depth: false, preserveDrawingBuffer: true });
+        const gl = canvas.getContext('webgl2', { powerPreference: 'high-performance', antialias: false, depth: false });
         if (!gl) alert('WebGL 2.0 non disponible.');
 
         const vsSource = `#version 300 es
