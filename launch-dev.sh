@@ -127,7 +127,7 @@ if [ "$OPEN_CHROME" = true ]; then
         python3 -m http.server 8888 --directory "${SCRIPT_DIR}" >/dev/null 2>&1 &
         sleep 0.5
     fi
-    DISPLAY="${DISPLAY:-:0}" google-chrome --ozone-platform=x11 --ignore-gpu-blocklist --enable-features=Vulkan,DefaultANGLEVulkan --use-gl=angle --use-angle=vulkan --disable-background-networking --app="http://localhost:8888/pirates_bay_caribbean.html" >/dev/null 2>&1 &
+    DISPLAY="${DISPLAY:-:0}" google-chrome --ignore-gpu-blocklist --disable-background-networking --app="http://localhost:8888/pirates_bay_caribbean.html" >/dev/null 2>&1 &
     echo "  ✓ Google Chrome lancé en arrière-plan (http://localhost:8888/pirates_bay_caribbean.html)."
 else
     echo ""

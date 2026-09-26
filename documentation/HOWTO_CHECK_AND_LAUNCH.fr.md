@@ -49,8 +49,8 @@ Pour éviter les erreurs de gestion d'image partagée Skia (`SharedImageManager`
 # 1. Démarrer le serveur HTTP local (Port 8888) :
 python3 -m http.server 8888 --directory $(pwd) &
 
-# 2. Lancer Chrome en mode autonome avec accélération GPU AMD Vulkan :
-DISPLAY=:0 google-chrome --ozone-platform=x11 --ignore-gpu-blocklist --enable-features=Vulkan,DefaultANGLEVulkan --use-gl=angle --use-angle=vulkan --disable-background-networking --app="http://localhost:8888/pirates_bay_caribbean.html" &>/dev/null &
+# 2. Lancer Chrome en mode autonome avec accélération GPU AMD OpenGL :
+DISPLAY=:0 google-chrome --ignore-gpu-blocklist --disable-background-networking --app="http://localhost:8888/pirates_bay_caribbean.html" &>/dev/null &
 ```
 *Dès qu'une modification de code est effectuée, rafraîchissez simplement la page (`F5`).*
 
