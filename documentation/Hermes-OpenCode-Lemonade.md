@@ -33,7 +33,7 @@ Spécifications d'installation et de déploiement pour le schéma hybride d'assi
 
 * **Moteur d'Inférence Local :** Lemonade (`http://localhost:13305/v1` ou `13306`)
 * **Modèle LLM Code Local :** `Qwen3-Coder-30B-A3B-Instruct-GGUF`
-* **Modèle Brain / Discussion :** `gemini-2.5-flash` / `gemini-3.7-flash`
+* **Modèle Brain / Discussion :** `gemini-3.6-flash` / `gemini-3.7-flash`
 * **Agent CLI :** Hermes Agent + OpenCode CLI
 * **Isolation :** Choix entre Profil Démo (`LocalAIDemo`) et Profil Personnel (`default`) + Conteneur Docker `pirates-bay-sandbox`
 

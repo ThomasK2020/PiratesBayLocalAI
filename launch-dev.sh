@@ -12,6 +12,7 @@ cd "${SCRIPT_DIR}"
 
 # Default mode is DEMO (LocalAIDemo)
 MODE="demo"
+START_HERMES=false
 OPEN_CHROME=false
 SKIP_DOCKER=false
 INTERACTIVE=false
@@ -19,6 +20,10 @@ INTERACTIVE=false
 # 1. Parse Arguments
 while [[ $# -gt 0 ]]; do
     case "$1" in
+        --with-hermes|--hermes)
+            START_HERMES=true
+            shift
+            ;;
         --demo)
             MODE="demo"
             shift
@@ -43,12 +48,13 @@ while [[ $# -gt 0 ]]; do
             echo "Usage: ./launch-dev.sh [OPTIONS]"
             echo ""
             echo "Options:"
-            echo "  --demo            Start Hermes under clean 'LocalAIDemo' profile (DEFAULT, no personal data)"
-            echo "  --perso           Start Hermes under default personal profile (full memories & skills)"
-            echo "  -i, --interactive Prompt interactively for profile selection"
-            echo "  --chrome          Open pirates_bay_caribbean.html in Google Chrome with AMD GPU flags"
-            echo "  --no-docker       Skip Docker sandbox startup"
-            echo "  -h, --help        Show this help message"
+            echo "  --hermes, --with-hermes  Configurer et lancer la session Hermes Agent (profil --demo ou --perso)"
+            echo "  --demo                   Utiliser le profil 'LocalAIDemo' pour Hermes (DÉFAUT, sans données perso)"
+            echo "  --perso                  Utiliser le profil personnel par défaut pour Hermes (mémoires & compétences)"
+            echo "  -i, --interactive        Choisir interactivement le profil Hermes"
+            echo "  --chrome                 Ouvrir pirates_bay_caribbean.html dans Google Chrome avec accélération GPU"
+            echo "  --no-docker              Ignorer le démarrage du conteneur Docker sandbox"
+            echo "  -h, --help               Afficher cette aide"
             exit 0
             ;;
         *)
@@ -79,9 +85,14 @@ if [ "$INTERACTIVE" = true ]; then
             MODE="demo"
             ;;
     esac
+    START_HERMES=true
 fi
 
-echo "Mode actif : [Profil ${MODE^^}]"
+if [ "$START_HERMES" = true ]; then
+    echo "Mode actif : [Hermes Activé — Profil ${MODE^^}]"
+else
+    echo "Mode actif : [Environnement Local Sandbox & WebGL — Hermes ignoré par défaut]"
+fi
 
 # 3. Verify Local LLM Endpoint & OpenCode Config
 echo ""
@@ -124,38 +135,47 @@ else
 fi
 
 # 6. Profile Preparation & Hermes Launch
-echo ""
-echo "[4/4] Préparation du profil Hermes (${MODE})..."
+if [ "$START_HERMES" = true ]; then
+    echo ""
+    echo "[4/4] Préparation du profil Hermes (${MODE})..."
 
-if [ "$MODE" = "demo" ]; then
-    DEMO_PROFILE_DIR="${HOME}/.hermes/profiles/LocalAIDemo"
-    mkdir -p "${DEMO_PROFILE_DIR}"
+    if [ "$MODE" = "demo" ]; then
+        DEMO_PROFILE_DIR="${HOME}/.hermes/profiles/LocalAIDemo"
+        mkdir -p "${DEMO_PROFILE_DIR}"
 
-    # Link technical skills to demo profile without copying personal memories
-    if [ ! -e "${DEMO_PROFILE_DIR}/skills" ] && [ -d "${HOME}/.hermes/skills" ]; then
-        ln -s "${HOME}/.hermes/skills" "${DEMO_PROFILE_DIR}/skills" 2>/dev/null || true
-    fi
+        # Link technical skills to demo profile without copying personal memories
+        if [ ! -e "${DEMO_PROFILE_DIR}/skills" ] && [ -d "${HOME}/.hermes/skills" ]; then
+            ln -s "${HOME}/.hermes/skills" "${DEMO_PROFILE_DIR}/skills" 2>/dev/null || true
+        fi
 
-    # Deploy minimal demo config
-    cat << 'EOF_CONFIG' > "${DEMO_PROFILE_DIR}/config.yaml"
+        # Deploy minimal demo config
+        cat << 'EOF_CONFIG' > "${DEMO_PROFILE_DIR}/config.yaml"
 model:
   provider: gemini
-  default: gemini-2.5-flash
+  default: gemini-3.6-flash
 EOF_CONFIG
 
-    # Copy Gemini API key if available without leaking secrets
-    if [ -f "${HOME}/.hermes/.env" ] && [ ! -f "${DEMO_PROFILE_DIR}/.env" ]; then
-        grep -E "^GEMINI_API_KEY=" "${HOME}/.hermes/.env" > "${DEMO_PROFILE_DIR}/.env" 2>/dev/null || true
-        chmod 600 "${DEMO_PROFILE_DIR}/.env" 2>/dev/null || true
-    fi
+        # Copy Gemini API key if available without leaking secrets
+        if [ -f "${HOME}/.hermes/.env" ] && [ ! -f "${DEMO_PROFILE_DIR}/.env" ]; then
+            grep -E "^GEMINI_API_KEY=" "${HOME}/.hermes/.env" > "${DEMO_PROFILE_DIR}/.env" 2>/dev/null || true
+            chmod 600 "${DEMO_PROFILE_DIR}/.env" 2>/dev/null || true
+        fi
 
-    echo "======================================================================"
-    echo "🚀 Démarrage de Hermes Agent (Profil DÉMO : LocalAIDemo)..."
-    echo "======================================================================"
-    exec hermes --profile LocalAIDemo
+        echo "======================================================================"
+        echo "🚀 Démarrage de Hermes Agent (Profil DÉMO : LocalAIDemo)..."
+        echo "======================================================================"
+        exec hermes --profile LocalAIDemo
+    else
+        echo "======================================================================"
+        echo "🚀 Démarrage de Hermes Agent (Profil PERSO : Default)..."
+        echo "======================================================================"
+        exec hermes
+    fi
 else
+    echo ""
+    echo "[4/4] Hermes Agent : Configuration et lancement ignorés par défaut (Hermes existe souvent déjà sur la machine)."
+    echo "      Pour configurer et lancer Hermes : ./launch-dev.sh --hermes"
     echo "======================================================================"
-    echo "🚀 Démarrage de Hermes Agent (Profil PERSO : Default)..."
+    echo "✅ Environnement PiratesBayLocalAI prêt pour la session de livecoding !"
     echo "======================================================================"
-    exec hermes
 fi
