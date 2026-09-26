@@ -214,7 +214,7 @@
 
     <script>
         const canvas = document.getElementById('glcanvas');
-        const gl = canvas.getContext('webgl2', { powerPreference: 'high-performance', antialias: false, depth: false });
+        const gl = canvas.getContext('webgl2', { powerPreference: 'high-performance', antialias: false, depth: false, preserveDrawingBuffer: true });
         if (!gl) alert('WebGL 2.0 non disponible.');
 
         const vsSource = `#version 300 es
@@ -399,16 +399,17 @@
         vec3 worldToRaft(vec3 p) {
             vec3 q = p - u_ship_pos;
             q.xz = rot2D(-u_ship_rot.x) * q.xz; // Yaw
-            q.yz = rot2D(-u_ship_rot.y) * q.yz; // Pitch
-            q.xy = rot2D(-u_ship_rot.z) * q.xy; // Roll
+            if (abs(u_ship_rot.y) > 0.001) q.yz = rot2D(-u_ship_rot.y) * q.yz; // Pitch
+            if (abs(u_ship_rot.z) > 0.001) q.xy = rot2D(-u_ship_rot.z) * q.xy; // Roll
             return q;
         }
 
         bool raftBoundingTest(vec3 ro, vec3 rd, out float tNear, out float tFar) {
-            vec3 boxMin = u_ship_pos - vec3(2.5, 0.9, 3.2);
-            vec3 boxMax = u_ship_pos + vec3(2.5, 2.6, 3.2);
+            vec3 boxMin = u_ship_pos - vec3(3.5, 1.5, 3.5);
+            vec3 boxMax = u_ship_pos + vec3(3.5, 3.0, 3.5);
 
-            vec3 invD = 1.0 / rd;
+            vec3 safeRd = rd + vec3(equal(rd, vec3(0.0))) * 0.00001;
+            vec3 invD = 1.0 / safeRd;
             vec3 t0 = (boxMin - ro) * invD;
             vec3 t1 = (boxMax - ro) * invD;
             vec3 tSmall = min(t0, t1);
