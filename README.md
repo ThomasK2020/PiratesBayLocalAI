@@ -21,15 +21,15 @@ Pour éviter les erreurs de gestion d'image partagée Skia (`SharedImageManager`
      ```
 
 > [!IMPORTANT]
-> ### ↺ Gestion des Versions & Procédure de Rollback (v2.00 / v3.00)
+> ### ↺ Gestion des Versions & Procédure de Rollback (v2.00 / v3.00 / v3.50)
 > 
-> Dans Git, chaque version étiquetée (`v2.00`, `v3.00`, etc.) est un **instantané immuable et permanent**. Vous pouvez consulter, reprendre ou effectuer un rollback vers une version spécifique à tout moment sans rien perdre :
+> Dans Git, chaque version étiquetée (`v2.00`, `v3.00`, `v3.50`, etc.) est un **instantané immuable et permanent**. Vous pouvez consulter, reprendre ou effectuer un rollback vers une version spécifique à tout moment sans rien perdre :
 > 
-> * **Consulter / Tester une version antérieure (ex: `v2.00`) :**
+> * **Consulter / Tester une version antérieure (ex: `v2.00` ou `v3.00`) :**
 >   ```bash
 >   git checkout v2.00
 >   ```
->   *(Pour revenir à la version actuelle `v3.00` : `git checkout main`)*
+>   *(Pour revenir à la version stable actuelle `v3.50` : `git checkout main`)*
 > 
 > * **Créer une branche de travail à partir d'une version antérieure :**
 >   ```bash

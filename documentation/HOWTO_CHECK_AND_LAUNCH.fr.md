@@ -55,9 +55,9 @@ DISPLAY=:0 google-chrome --ignore-gpu-blocklist --disable-background-networking 
 *Dès qu'une modification de code est effectuée, rafraîchissez simplement la page (`F5`).*
 
 > [!IMPORTANT]
-> ### ↺ Gestion des Versions & Procédure de Rollback (`v2.00` / `v3.00`)
+> ### ↺ Gestion des Versions & Procédure de Rollback (`v2.00` / `v3.00` / `v3.50`)
 > 
-> Dans Git, chaque version étiquetée (`v2.00`, `v3.00`, etc.) est un **instantané immuable et permanent**. Vous pouvez consulter, reprendre ou effectuer un rollback vers une version spécifique à tout moment :
+> Dans Git, chaque version étiquetée (`v2.00`, `v3.00`, `v3.50`, etc.) est un **instantané immuable et permanent**. Vous pouvez consulter, reprendre ou effectuer un rollback vers une version spécifique à tout moment :
 > 
 > * **Consulter / Tester une version antérieure (ex: `v2.00`) :**
 >   ```bash
