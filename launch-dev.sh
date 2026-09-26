@@ -111,12 +111,16 @@ fi
 # 5. Open Chrome GPU if requested
 if [ "$OPEN_CHROME" = true ]; then
     echo ""
-    echo "[3/4] Lancement de Google Chrome (Accélération GPU AMD)..."
-    google-chrome --ozone-platform=x11 --ignore-gpu-blocklist --enable-features=Vulkan,DefaultANGLEVulkan --use-gl=angle --use-angle=vulkan "${SCRIPT_DIR}/pirates_bay_caribbean.html" >/dev/null 2>&1 &
-    echo "  ✓ Google Chrome lancé en arrière-plan."
+    echo "[3/4] Démarrage du serveur HTTP local (Port 8888) & Lancement de Google Chrome (GPU AMD Vulkan)..."
+    if ! lsof -i :8888 >/dev/null 2>&1; then
+        python3 -m http.server 8888 --directory "${SCRIPT_DIR}" >/dev/null 2>&1 &
+        sleep 0.5
+    fi
+    DISPLAY="${DISPLAY:-:0}" google-chrome --ozone-platform=x11 --ignore-gpu-blocklist --enable-features=Vulkan,DefaultANGLEVulkan --use-gl=angle --use-angle=vulkan --disable-background-networking --app="http://localhost:8888/pirates_bay_caribbean.html" >/dev/null 2>&1 &
+    echo "  ✓ Google Chrome lancé en arrière-plan (http://localhost:8888/pirates_bay_caribbean.html)."
 else
     echo ""
-    echo "[3/4] Rendu 3D : Ouvrez '${SCRIPT_DIR}/pirates_bay_caribbean.html' dans Chrome pour visualiser."
+    echo "[3/4] Rendu 3D : Démarrez 'python3 -m http.server 8888' et ouvrez 'http://localhost:8888/pirates_bay_caribbean.html' dans Chrome."
 fi
 
 # 6. Profile Preparation & Hermes Launch
