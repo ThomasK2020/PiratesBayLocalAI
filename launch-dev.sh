@@ -13,7 +13,7 @@ cd "${SCRIPT_DIR}"
 # Default mode is DEMO (LocalAIDemo)
 MODE="demo"
 START_HERMES=false
-OPEN_CHROME=false
+OPEN_CHROME=true
 SKIP_DOCKER=false
 INTERACTIVE=false
 
@@ -40,6 +40,10 @@ while [[ $# -gt 0 ]]; do
             OPEN_CHROME=true
             shift
             ;;
+        --no-chrome)
+            OPEN_CHROME=false
+            shift
+            ;;
         --no-docker)
             SKIP_DOCKER=true
             shift
@@ -52,7 +56,8 @@ while [[ $# -gt 0 ]]; do
             echo "  --demo                   Utiliser le profil 'LocalAIDemo' pour Hermes (DÉFAUT, sans données perso)"
             echo "  --perso                  Utiliser le profil personnel par défaut pour Hermes (mémoires & compétences)"
             echo "  -i, --interactive        Choisir interactivement le profil Hermes"
-            echo "  --chrome                 Ouvrir pirates_bay_caribbean.html dans Google Chrome avec accélération GPU"
+            echo "  --no-chrome              Ne pas lancer automatiquement Google Chrome et le serveur HTTP"
+            echo "  --chrome                 Lancer Google Chrome et le serveur HTTP (activé par défaut)"
             echo "  --no-docker              Ignorer le démarrage du conteneur Docker sandbox"
             echo "  -h, --help               Afficher cette aide"
             exit 0
@@ -122,16 +127,17 @@ fi
 # 5. Open Chrome GPU if requested
 if [ "$OPEN_CHROME" = true ]; then
     echo ""
-    echo "[3/4] Démarrage du serveur HTTP local (Port 8888) & Lancement de Google Chrome (GPU AMD OpenGL)..."
+    echo "[3/4] Démarrage du serveur HTTP local (Port 8888) & Lancement automatique de Google Chrome (GPU AMD)..."
     if ! lsof -i :8888 >/dev/null 2>&1; then
         python3 -m http.server 8888 --directory "${SCRIPT_DIR}" >/dev/null 2>&1 &
         sleep 0.5
     fi
+    echo "  ✓ Serveur HTTP local actif sur http://localhost:8888"
     DISPLAY="${DISPLAY:-:0}" google-chrome --ignore-gpu-blocklist --disable-background-networking --app="http://localhost:8888/pirates_bay_caribbean.html" >/dev/null 2>&1 &
-    echo "  ✓ Google Chrome lancé en arrière-plan (http://localhost:8888/pirates_bay_caribbean.html)."
+    echo "  ✓ Google Chrome lancé automatiquement en arrière-plan (http://localhost:8888/pirates_bay_caribbean.html)."
 else
     echo ""
-    echo "[3/4] Rendu 3D : Démarrez 'python3 -m http.server 8888' et ouvrez 'http://localhost:8888/pirates_bay_caribbean.html' dans Chrome."
+    echo "[3/4] Rendu 3D : Lancement Chrome ignoré (--no-chrome). Démarrez 'python3 -m http.server 8888' si besoin."
 fi
 
 # 6. Profile Preparation & Hermes Launch

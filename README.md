@@ -110,11 +110,14 @@ Créez ou mettez à jour votre fichier de configuration OpenCode hôte :
 
 ### Step 4 : Lancer la Session de Livecoding (`launch-dev.sh`)
 ```bash
-# Lancement interactif (choix entre profil Démo neutre ou profil Perso) :
+# Lancement standard (Démarre la sandbox Docker, le serveur HTTP :8888 et ouvre Chrome GPU automatiquement) :
 ./launch-dev.sh
 
-# Lancement direct en Démo avec ouverture 3D GPU AMD dans Chrome :
-./launch-dev.sh --demo --chrome
+# Lancement avec configuration et démarrage de session Hermes Agent :
+./launch-dev.sh --hermes
+
+# Lancement sans interface graphique Chrome (mode headless) :
+./launch-dev.sh --no-chrome
 ```
 
 ---

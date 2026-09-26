@@ -26,17 +26,17 @@ Ou manuellement :
 Le projet fournit le script interactif `launch-dev.sh` qui configure l'environnement, démarre la sandbox Docker (4 Go RAM) et vous permet de choisir votre profil :
 
 ```bash
-# Lancement interactif (menu de sélection Démo / Perso) :
+# Lancement standard (Docker sandbox + serveur HTTP local :8888 + Chrome GPU automatique) :
 ./launch-dev.sh
 
-# Lancement direct en mode Démo (profil neutre sans données perso) :
-./launch-dev.sh --demo
+# Lancement avec configuration et démarrage de Hermes Agent :
+./launch-dev.sh --hermes
 
-# Lancement direct en mode Personnel (données, mémoires et skills perso) :
-./launch-dev.sh --perso
+# Lancement interactif (choix du profil Hermes Démo ou Perso) :
+./launch-dev.sh --hermes -i
 
-# Avec ouverture automatique de la 3D dans Google Chrome (Accélération GPU AMD) :
-./launch-dev.sh --demo --chrome
+# Lancement sans interface graphique Chrome (headless) :
+./launch-dev.sh --no-chrome
 ```
 
 ---
