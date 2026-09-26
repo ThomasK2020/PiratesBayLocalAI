@@ -5,19 +5,19 @@ Environnement de prototypage et de développement sécurisé, conteneurisé et o
 ### 🖥️ Lancement de la Démo 3D (Serveur HTTP Local - Recommandé)
 Pour éviter les erreurs de gestion d'image partagée Skia (`SharedImageManager`) liées au protocole `file://` sous Linux Vulkan/ANGLE :
 
-1. **Démarrer le serveur HTTP local (Port 8080) :**
+1. **Démarrer le serveur HTTP local (Port 8888) :**
    ```bash
-   python3 -m http.server 8080 --directory $(pwd) &
+   python3 -m http.server 8888 --directory $(pwd) &
    ```
 
 2. **Lancer Chrome avec l'accélération GPU AMD Vulkan :**
    * **Mode Application (Recommandé) :**
      ```bash
-     DISPLAY=:0 google-chrome --ozone-platform=x11 --ignore-gpu-blocklist --enable-features=Vulkan,DefaultANGLEVulkan --use-gl=angle --use-angle=vulkan --app="http://localhost:8080/pirates_bay_caribbean.html" &
+     DISPLAY=:0 google-chrome --ozone-platform=x11 --ignore-gpu-blocklist --enable-features=Vulkan,DefaultANGLEVulkan --use-gl=angle --use-angle=vulkan --app="http://localhost:8888/pirates_bay_caribbean.html" &
      ```
    * **Version Prototypée (`./workspace`) :**
      ```bash
-     DISPLAY=:0 google-chrome --ozone-platform=x11 --ignore-gpu-blocklist --enable-features=Vulkan,DefaultANGLEVulkan --use-gl=angle --use-angle=vulkan --app="http://localhost:8080/workspace/pirates_bay_caribbean.html" &
+     DISPLAY=:0 google-chrome --ozone-platform=x11 --ignore-gpu-blocklist --enable-features=Vulkan,DefaultANGLEVulkan --use-gl=angle --use-angle=vulkan --app="http://localhost:8888/workspace/pirates_bay_caribbean.html" &
      ```
 
 ---
