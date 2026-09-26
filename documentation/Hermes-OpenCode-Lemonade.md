@@ -80,27 +80,75 @@ Vous pouvez lancer Hermes dans deux modes distincts :
 
 ---
 
-## 🚀 Script de Lancement Tout-en-un (`launch-dev.sh`)
+## 🚀 1. Lancement du Projet & Visualisation Chrome GPU
 
-Le script `launch-dev.sh` permet de tout démarrer et gère le choix du profil :
+Le script `launch-dev.sh` orchestre l'ensemble de l'environnement en une seule commande :
 
 ```bash
-# 1. Mode Démo (Profil neutre sans mémoires perso)
-./launch-dev.sh --demo
-
-# 2. Mode Perso (Profil par défaut avec données perso)
-./launch-dev.sh --perso
-
-# 3. Lancement interactif (menu de sélection)
+# Lancement tout-en-un par défaut (Vérification Lemonade, Docker Sandbox, Serveur HTTP :8888 et ouverture Chrome) :
 ./launch-dev.sh
 
-# 4. Avec ouverture automatique de la page 3D dans Chrome (GPU AMD) :
-./launch-dev.sh --demo --chrome
+# Lancement avec configuration et démarrage de la session Hermes Agent (profil Démo LocalAIDemo) :
+./launch-dev.sh --hermes
+
+# Lancement avec profil Hermes Personnel :
+./launch-dev.sh --hermes --perso
+
+# Lancement en mode console sans ouvrir l'interface Chrome (mode headless) :
+./launch-dev.sh --no-chrome
 ```
+
+**Ce qui se passe automatiquement :**
+1. **Lemonade Local LLM :** Vérification de l'API OpenAI locale sur `http://localhost:13305/v1`.
+2. **Sandbox Docker :** Démarrage du conteneur `pirates-bay-sandbox` (limite 4 Go RAM) montant le dossier `./workspace`.
+3. **Serveur HTTP Local (Port 8888) :** Lancement en tâche de fond de `python3 -m http.server 8888` pour contourner les blocages `file://` (Skia SharedImageManager).
+4. **Google Chrome GPU AMD :** Ouverture directe en mode application (`--app=http://localhost:8888/pirates_bay_caribbean.html`) avec l'accélération matérielle AMD Radeon 8060S activée.
 
 ---
 
-## 💡 Exemple de Consigne Livecoding pour Hermes
+## 🤖 2. S'assurer dans Hermes que l'on peut coder via OpenCode
 
-Une fois dans la session Hermes :
-> *"Lis `AGENTS.md`. Utilise OpenCode pour générer et tester le code de la fonctionnalité X dans `./workspace`. Vérifie ensuite les tests dans le conteneur Docker."*
+Pour que **Hermes Agent** puisse déléguer l'écriture et le refactoring de code à **OpenCode CLI** propulsé par le modèle local **Qwen Coder** (Lemonade) :
+
+### A. Vérification de la configuration d'OpenCode hôte
+Assurez-vous que le fichier `~/.config/opencode/config.json` pointe bien vers votre instance locale de Lemonade :
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "lemonade": {
+      "npm": "@ai-sdk/openai",
+      "options": {
+        "baseURL": "http://127.0.0.1:13305/v1",
+        "apiKey": "lemonade"
+      },
+      "models": {
+        "Qwen3-Coder-30B-A3B-Instruct-GGUF": {
+          "name": "Qwen3-Coder-30B-A3B-Instruct-GGUF"
+        }
+      },
+      "name": "Lemonade Local"
+    }
+  },
+  "model": "lemonade/Qwen3-Coder-30B-A3B-Instruct-GGUF"
+}
+```
+
+### B. Vérification de la compétence (`skill`) OpenCode dans Hermes
+Dans votre session Hermes, la compétence spécialisée `opencode` doit être disponible :
+* **Vérifier le skill :** Hermes charge `skill_view(name='opencode')`.
+* **Test de bon fonctionnement (Smoke Test) :**
+  ```bash
+  opencode run 'Respond with exactly: OPENCODE_SMOKE_OK'
+  ```
+  Le retour doit contenir `OPENCODE_SMOKE_OK` sans erreur de provider ou de modèle.
+
+### C. Consignes Types pour ordonner à Hermes de coder via OpenCode
+Dans le chat avec Hermes, donnez une consigne directive :
+> *"Lis `AGENTS.md` et `StatementOfWork/SOW_BUOY_PHYSICS.md`. Délègue l'implémentation de la fonction d'amortissement à OpenCode dans le répertoire `./workspace` avec Qwen Coder local. Lance ensuite les tests unitaires dans le conteneur Docker `pirates-bay-sandbox` et fais-moi un rapport."*
+
+Hermes exécutera alors en tâche de fond :
+```bash
+opencode run 'Implémente la physique de flottaison selon SOW_BUOY_PHYSICS.md' -f AGENTS.md
+```
+OpenCode produira le code en local via Qwen Coder sans saturer la VRAM, tandis que Hermes supervisera la qualité et le cycle de vie git.
