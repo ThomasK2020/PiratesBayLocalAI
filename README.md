@@ -91,17 +91,16 @@ Créez ou mettez à jour votre fichier de configuration OpenCode hôte :
   "$schema": "https://opencode.ai/config.json",
   "provider": {
     "lemonade": {
-      "npm": "@ai-sdk/openai",
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Lemonade Local",
       "options": {
-        "baseURL": "http://127.0.0.1:13305/v1",
-        "apiKey": "lemonade"
+        "baseURL": "http://127.0.0.1:13305/v1"
       },
       "models": {
         "Qwen3-Coder-30B-A3B-Instruct-GGUF": {
           "name": "Qwen3-Coder-30B-A3B-Instruct-GGUF"
         }
-      },
-      "name": "Lemonade Local"
+      }
     }
   },
   "model": "lemonade/Qwen3-Coder-30B-A3B-Instruct-GGUF"

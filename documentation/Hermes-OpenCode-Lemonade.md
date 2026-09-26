@@ -48,17 +48,16 @@ Fichier de configuration hôte `~/.config/opencode/config.json` :
   "$schema": "https://opencode.ai/config.json",
   "provider": {
     "lemonade": {
-      "npm": "@ai-sdk/openai",
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Lemonade Local",
       "options": {
-        "baseURL": "http://127.0.0.1:13305/v1",
-        "apiKey": "lemonade"
+        "baseURL": "http://127.0.0.1:13305/v1"
       },
       "models": {
         "Qwen3-Coder-30B-A3B-Instruct-GGUF": {
           "name": "Qwen3-Coder-30B-A3B-Instruct-GGUF"
         }
-      },
-      "name": "Lemonade Local"
+      }
     }
   },
   "model": "lemonade/Qwen3-Coder-30B-A3B-Instruct-GGUF"
@@ -117,17 +116,16 @@ Assurez-vous que le fichier `~/.config/opencode/config.json` pointe bien vers vo
   "$schema": "https://opencode.ai/config.json",
   "provider": {
     "lemonade": {
-      "npm": "@ai-sdk/openai",
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Lemonade Local",
       "options": {
-        "baseURL": "http://127.0.0.1:13305/v1",
-        "apiKey": "lemonade"
+        "baseURL": "http://127.0.0.1:13305/v1"
       },
       "models": {
         "Qwen3-Coder-30B-A3B-Instruct-GGUF": {
           "name": "Qwen3-Coder-30B-A3B-Instruct-GGUF"
         }
-      },
-      "name": "Lemonade Local"
+      }
     }
   },
   "model": "lemonade/Qwen3-Coder-30B-A3B-Instruct-GGUF"

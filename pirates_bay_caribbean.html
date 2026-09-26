@@ -668,20 +668,27 @@
                 vec3 seaBounce = vec3(0.03, 0.28, 0.24) * max(-n.y * 0.6 + 0.4, 0.0);
 
                 if (raftMat == 1) {
-                    // Tissu orange pastel haute visibilité (flotteurs et structure)
-                    vec3 orangePastel = vec3(1.0, 0.40, 0.08);
-                    // Légère texture de tissu enduit / nervures de segmentation
-                    float segments = cos(atan(q.z, q.x) * 8.0) * 0.04;
-                    orangePastel = mix(orangePastel, vec3(0.92, 0.35, 0.06), segments);
+                    // Angle azimutal et motif périodique 8 bandes (4 rouges, 4 jaunes)
+                    float theta = atan(q.z, q.x);
+                    float stripeSignal = sin(theta * 4.0);
+                    float stripeMask = smoothstep(-0.06, 0.06, stripeSignal);
+
+                    vec3 buoyRed = vec3(0.92, 0.12, 0.08);
+                    vec3 buoyYellow = vec3(0.98, 0.82, 0.06);
+                    vec3 colBuoy = mix(buoyRed, buoyYellow, stripeMask);
+
+                    // Texture subtile de nervures d'assemblage pneumatique
+                    float segments = cos(theta * 8.0) * 0.03;
+                    colBuoy += segments;
 
                     // Mouillage à la base du flotteur
                     float wetLevel = smoothstep(0.35, -0.1, q.y);
-                    orangePastel = mix(orangePastel, orangePastel * 0.72, wetLevel * 0.5);
+                    colBuoy = mix(colBuoy, colBuoy * 0.70, wetLevel * 0.5);
 
-                    // Spécularité douce de polymère marin / fibre plastique traitée
+                    // Spécularité douce de polymère marin et intégration atmosphérique
                     float spec = pow(max(dot(ref, sunDir), 0.0), 28.0);
-                    col = orangePastel * (diff * vec3(1.25, 1.15, 0.95) + skyAmb + seaBounce);
-                    col += vec3(1.0, 0.92, 0.85) * spec * (0.25 + 0.35 * wetLevel) + rim * vec3(1.0, 0.5, 0.2) * 0.20;
+                    col = colBuoy * (diff * vec3(1.25, 1.15, 0.95) + skyAmb + seaBounce);
+                    col += vec3(1.0, 0.92, 0.85) * spec * (0.25 + 0.35 * wetLevel) + rim * vec3(1.0, 0.6, 0.2) * 0.20;
 
                 } else if (raftMat == 2) {
                     // Plancher technique antidérapant (composite gris anthracite)
