@@ -10,14 +10,14 @@ Pour éviter les erreurs de gestion d'image partagée Skia (`SharedImageManager`
    python3 -m http.server 8888 --directory $(pwd) &
    ```
 
-2. **Lancer Chrome avec l'accélération GPU AMD Vulkan :**
+2. **Lancer Chrome avec l'accélération GPU AMD Vulkan (Logs réduits) :**
    * **Mode Application (Recommandé) :**
      ```bash
-     DISPLAY=:0 google-chrome --ozone-platform=x11 --ignore-gpu-blocklist --enable-features=Vulkan,DefaultANGLEVulkan --use-gl=angle --use-angle=vulkan --app="http://localhost:8888/pirates_bay_caribbean.html" &
+     DISPLAY=:0 google-chrome --ozone-platform=x11 --ignore-gpu-blocklist --enable-features=Vulkan,DefaultANGLEVulkan --use-gl=angle --use-angle=vulkan --disable-background-networking --app="http://localhost:8888/pirates_bay_caribbean.html" &>/dev/null &
      ```
    * **Version Prototypée (`./workspace`) :**
      ```bash
-     DISPLAY=:0 google-chrome --ozone-platform=x11 --ignore-gpu-blocklist --enable-features=Vulkan,DefaultANGLEVulkan --use-gl=angle --use-angle=vulkan --app="http://localhost:8888/workspace/pirates_bay_caribbean.html" &
+     DISPLAY=:0 google-chrome --ozone-platform=x11 --ignore-gpu-blocklist --enable-features=Vulkan,DefaultANGLEVulkan --use-gl=angle --use-angle=vulkan --disable-background-networking --app="http://localhost:8888/workspace/pirates_bay_caribbean.html" &>/dev/null &
      ```
 
 ---
