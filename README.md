@@ -2,20 +2,20 @@
 
 Environnement de prototypage et de développement sécurisé, conteneurisé et orchestré pour l'assistance par IA locale (**OpenCode CLI**, **Hermes Agent** et **Qwen Coder**).
 
-### 🖥️ Lancement du Navigateur Chrome Autonome (Démo GNOME)
-Pour ouvrir la démo 3D dans une fenêtre Google Chrome autonome et indépendante sur le bureau GNOME :
+### 🖥️ Lancement du Navigateur Chrome Autonome (Accélération GPU AMD Vulkan)
+Pour ouvrir la démo 3D avec le moteur WebGL2/Vulkan activé sur GPU AMD Radeon :
 
-* **Mode Application (Recommandé - Sans barre d'adresse) :**
+* **Mode Application (Recommandé) :**
   ```bash
-  DISPLAY=:0 google-chrome --app="file://$(pwd)/pirates_bay_caribbean.html" &
+  DISPLAY=:0 google-chrome --ozone-platform=x11 --ignore-gpu-blocklist --enable-features=Vulkan,DefaultANGLEVulkan --use-gl=angle --use-angle=vulkan --app="file://$(pwd)/pirates_bay_caribbean.html" &
   ```
 * **Mode Fenêtre Standard :**
   ```bash
-  DISPLAY=:0 google-chrome --new-window "file://$(pwd)/pirates_bay_caribbean.html" &
+  DISPLAY=:0 google-chrome --ozone-platform=x11 --ignore-gpu-blocklist --enable-features=Vulkan,DefaultANGLEVulkan --use-gl=angle --use-angle=vulkan --new-window "file://$(pwd)/pirates_bay_caribbean.html" &
   ```
-* **Version Prototypée dans `./workspace` :**
+* **Version Prototypée (`./workspace`) :**
   ```bash
-  DISPLAY=:0 google-chrome --app="file://$(pwd)/workspace/pirates_bay_caribbean.html" &
+  DISPLAY=:0 google-chrome --ozone-platform=x11 --ignore-gpu-blocklist --enable-features=Vulkan,DefaultANGLEVulkan --use-gl=angle --use-angle=vulkan --app="file://$(pwd)/workspace/pirates_bay_caribbean.html" &
   ```
 
 ---
