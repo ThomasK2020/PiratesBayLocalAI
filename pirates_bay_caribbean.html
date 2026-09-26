@@ -329,6 +329,15 @@
                 amp *= 0.22;
                 choppy = mix(choppy, 1.0, 0.2);
             }
+
+            // Refoulement d'eau hydrodynamique sous le boudin pneumatique
+            vec3 qRaft = u_ship_mat * (p - u_ship_pos);
+            float dRaftHull = length(vec2(qRaft.x / 1.5, qRaft.z / 2.1));
+            if (dRaftHull < 1.3 && abs(qRaft.y) < 1.2) {
+                float displacement = smoothstep(1.3, 0.2, dRaftHull);
+                h -= displacement * 0.55 * u_roughness;
+            }
+
             return p.y - h;
         }
 
@@ -1051,9 +1060,9 @@
             if (raftZ > 20.0) raftZ = 20.0;
             if (raftZ < 0.0) raftZ = 0.0;
 
-            // Flottaison hydrodynamique sur la houle avec calcul du tangage (pitch) et du roulis (roll)
+            // Flottaison hydrodynamique multi-points sur la houle
             const waveDelta = 0.8;
-            const waveY = getWaveHeight(raftX, raftZ, t, currentRoughness);
+            const waveY_center = getWaveHeight(raftX, raftZ, t, currentRoughness);
             const waveY_pz = getWaveHeight(raftX, raftZ + waveDelta, t, currentRoughness);
             const waveY_nz = getWaveHeight(raftX, raftZ - waveDelta, t, currentRoughness);
             const waveY_px = getWaveHeight(raftX + waveDelta, raftZ, t, currentRoughness);
@@ -1064,7 +1073,10 @@
 
             const raftPitch = Math.atan(-dz) * 0.7; // Tangage le long de la pente
             const raftRoll = Math.atan(dx) * 0.7;   // Roulis le long de la pente
-            const raftY = waveY + 0.25;
+            
+            // Hauteur maximale mesurée sur la houle pour garder le boudin au-dessus de la crête
+            const maxWaveY = Math.max(waveY_center, waveY_pz, waveY_nz, waveY_px, waveY_nx);
+            const raftY = maxWaveY + 0.38;
 
             // Calcul de la matrice de rotation 3D (Yaw, Pitch, Roll)
             const cy = Math.cos(-raftYaw), sy = Math.sin(-raftYaw);
