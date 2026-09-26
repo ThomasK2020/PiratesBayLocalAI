@@ -2,21 +2,23 @@
 
 Environnement de prototypage et de développement sécurisé, conteneurisé et orchestré pour l'assistance par IA locale (**OpenCode CLI**, **Hermes Agent** et **Qwen Coder**).
 
-### 🖥️ Lancement du Navigateur Chrome Autonome (Accélération GPU AMD Vulkan)
-Pour ouvrir la démo 3D avec le moteur WebGL2/Vulkan activé sur GPU AMD Radeon :
+### 🖥️ Lancement de la Démo 3D (Serveur HTTP Local - Recommandé)
+Pour éviter les erreurs de gestion d'image partagée Skia (`SharedImageManager`) liées au protocole `file://` sous Linux Vulkan/ANGLE :
 
-* **Mode Application (Recommandé) :**
-  ```bash
-  DISPLAY=:0 google-chrome --ozone-platform=x11 --ignore-gpu-blocklist --enable-features=Vulkan,DefaultANGLEVulkan --use-gl=angle --use-angle=vulkan --app="file://$(pwd)/pirates_bay_caribbean.html" &
-  ```
-* **Mode Fenêtre Standard :**
-  ```bash
-  DISPLAY=:0 google-chrome --ozone-platform=x11 --ignore-gpu-blocklist --enable-features=Vulkan,DefaultANGLEVulkan --use-gl=angle --use-angle=vulkan --new-window "file://$(pwd)/pirates_bay_caribbean.html" &
-  ```
-* **Version Prototypée (`./workspace`) :**
-  ```bash
-  DISPLAY=:0 google-chrome --ozone-platform=x11 --ignore-gpu-blocklist --enable-features=Vulkan,DefaultANGLEVulkan --use-gl=angle --use-angle=vulkan --app="file://$(pwd)/workspace/pirates_bay_caribbean.html" &
-  ```
+1. **Démarrer le serveur HTTP local (Port 8080) :**
+   ```bash
+   python3 -m http.server 8080 --directory $(pwd) &
+   ```
+
+2. **Lancer Chrome avec l'accélération GPU AMD Vulkan :**
+   * **Mode Application (Recommandé) :**
+     ```bash
+     DISPLAY=:0 google-chrome --ozone-platform=x11 --ignore-gpu-blocklist --enable-features=Vulkan,DefaultANGLEVulkan --use-gl=angle --use-angle=vulkan --app="http://localhost:8080/pirates_bay_caribbean.html" &
+     ```
+   * **Version Prototypée (`./workspace`) :**
+     ```bash
+     DISPLAY=:0 google-chrome --ozone-platform=x11 --ignore-gpu-blocklist --enable-features=Vulkan,DefaultANGLEVulkan --use-gl=angle --use-angle=vulkan --app="http://localhost:8080/workspace/pirates_bay_caribbean.html" &
+     ```
 
 ---
 
