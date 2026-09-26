@@ -398,9 +398,9 @@
 
         vec3 worldToRaft(vec3 p) {
             vec3 q = p - u_ship_pos;
-            q.xz *= rot2D(-u_ship_rot.x); // Yaw
-            q.yz *= rot2D(-u_ship_rot.y); // Pitch
-            q.xy *= rot2D(-u_ship_rot.z); // Roll
+            q.xz = rot2D(-u_ship_rot.x) * q.xz; // Yaw
+            q.yz = rot2D(-u_ship_rot.y) * q.yz; // Pitch
+            q.xy = rot2D(-u_ship_rot.z) * q.xy; // Roll
             return q;
         }
 
@@ -624,8 +624,8 @@
             vec3 ro = vec3(sin(u_time * 0.03) * 5.0, 3.2 + camSwell + u_zoom, -11.0 + cos(u_time * 0.03) * 3.5);
             vec3 rd = normalize(vec3(uv, 1.25));
 
-            rd.yz *= rot2D(pitch - 0.04);
-            rd.xz *= rot2D(yaw);
+            rd.yz = rot2D(pitch - 0.04) * rd.yz;
+            rd.xz = rot2D(yaw) * rd.xz;
 
             vec3 sunDir = normalize(vec3(0.55, 0.40, 0.70));
             vec3 col = vec3(0.0);
@@ -653,7 +653,9 @@
                 
                 // Rotation de la normale en coordonnées monde (axe vertical uniquement)
                 vec3 n = localN;
-                n.xz *= rot2D(u_ship_rot.x);
+                n.xy = rot2D(u_ship_rot.z) * n.xy; // Roll inverse
+                n.yz = rot2D(u_ship_rot.y) * n.yz; // Pitch inverse
+                n.xz = rot2D(u_ship_rot.x) * n.xz; // Yaw inverse
                 n = normalize(n);
 
                 vec3 ref = reflect(rd, n);
@@ -803,7 +805,7 @@
 
                 // Sillage d'écume simplifié du radeau de secours
                 vec3 qRaftWater = seaP - u_ship_pos;
-                qRaftWater.xz *= rot2D(-u_ship_rot.x);
+                qRaftWater.xz = rot2D(-u_ship_rot.x) * qRaftWater.xz;
                 float distRaftCenter = length(vec2(qRaftWater.x / 1.35, qRaftWater.z / 1.9));
                 float raftPerimeterDist = abs(distRaftCenter - 1.0);
                 if (abs(qRaftWater.y) < 0.6 && raftPerimeterDist < 0.35) {
