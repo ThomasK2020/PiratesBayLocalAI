@@ -20,6 +20,28 @@ Pour éviter les erreurs de gestion d'image partagée Skia (`SharedImageManager`
      DISPLAY=:0 google-chrome --ozone-platform=x11 --ignore-gpu-blocklist --enable-features=Vulkan,DefaultANGLEVulkan --use-gl=angle --use-angle=vulkan --disable-background-networking --app="http://localhost:8888/workspace/pirates_bay_caribbean.html" &>/dev/null &
      ```
 
+> [!IMPORTANT]
+> ### ↺ Gestion des Versions & Procédure de Rollback (v2.00 / v3.00)
+> 
+> Dans Git, chaque version étiquetée (`v2.00`, `v3.00`, etc.) est un **instantané immuable et permanent**. Vous pouvez consulter, reprendre ou effectuer un rollback vers une version spécifique à tout moment sans rien perdre :
+> 
+> * **Consulter / Tester une version antérieure (ex: `v2.00`) :**
+>   ```bash
+>   git checkout v2.00
+>   ```
+>   *(Pour revenir à la version actuelle `v3.00` : `git checkout main`)*
+> 
+> * **Créer une branche de travail à partir d'une version antérieure :**
+>   ```bash
+>   git checkout -b reprise-v2 v2.00
+>   ```
+> 
+> * **Effectuer un Rollback complet de la branche `main` vers la `v2.00` :**
+>   ```bash
+>   git reset --hard v2.00
+>   git push -f origin main
+>   ```
+
 ---
 
 ## 🚀 Vue d'ensemble
