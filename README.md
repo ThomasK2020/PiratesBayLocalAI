@@ -86,6 +86,8 @@ PiratesBayLocalAI/
 ├── README.md                  <- Guide d'installation et documentation
 ├── check-environment.sh       <- Script de vérification de l'environnement système
 ├── node-agent.sh              <- Démon / Agent d'auto-réparation & pilotage distant
+├── StatementOfWork/
+│   └── SOW_BUOY_PHYSICS.md    <- Cahier des charges technico-fonctionnel (Physique Bouée)
 ├── documentation/
 │   ├── HOWTO_CHECK_AND_LAUNCH.md  <- Guide pas à pas d'installation & démo (FR / EN)
 │   ├── Hermes-OpenCode-Lemonade.md<- Architecture Hybride (Gemini Brain + Qwen Code)
