@@ -233,7 +233,8 @@
         uniform float u_zoom;
         uniform float u_roughness;
         uniform vec3 u_ship_pos;       // Position du radeau dans la baie (X, Y, Z)
-        uniform vec3 u_ship_rot;       // Orientation : yaw (axe vertical uniquement, pitch=0, roll=0)
+        uniform mat3 u_ship_mat;       // Matrice 3D Monde -> Radeau
+        uniform mat3 u_ship_inv_mat;   // Matrice 3D Radeau -> Monde
         uniform float u_ship_speed;    // Vitesse effective de déplacement (-1.0 à 1.0)
 
         #define PI 3.14159265359
@@ -397,11 +398,7 @@
         }
 
         vec3 worldToRaft(vec3 p) {
-            vec3 q = p - u_ship_pos;
-            q.xz = rot2D(-u_ship_rot.x) * q.xz; // Yaw
-            if (abs(u_ship_rot.y) > 0.001) q.yz = rot2D(-u_ship_rot.y) * q.yz; // Pitch
-            if (abs(u_ship_rot.z) > 0.001) q.xy = rot2D(-u_ship_rot.z) * q.xy; // Roll
-            return q;
+            return u_ship_mat * (p - u_ship_pos);
         }
 
         bool raftBoundingTest(vec3 ro, vec3 rd, out float tNear, out float tFar) {
@@ -652,12 +649,8 @@
                 vec3 q = raftLocalP;
                 vec3 localN = getRaftNormal(q);
                 
-                // Rotation de la normale en coordonnées monde (axe vertical uniquement)
-                vec3 n = localN;
-                n.xy = rot2D(u_ship_rot.z) * n.xy; // Roll inverse
-                n.yz = rot2D(u_ship_rot.y) * n.yz; // Pitch inverse
-                n.xz = rot2D(u_ship_rot.x) * n.xz; // Yaw inverse
-                n = normalize(n);
+                // Rotation de la normale en coordonnées monde
+                vec3 n = normalize(u_ship_inv_mat * localN);
 
                 vec3 ref = reflect(rd, n);
                 float diff = max(dot(n, sunDir), 0.0);
@@ -805,8 +798,7 @@
                 }
 
                 // Sillage d'écume simplifié du radeau de secours
-                vec3 qRaftWater = seaP - u_ship_pos;
-                qRaftWater.xz = rot2D(-u_ship_rot.x) * qRaftWater.xz;
+                vec3 qRaftWater = u_ship_mat * (seaP - u_ship_pos);
                 float distRaftCenter = length(vec2(qRaftWater.x / 1.35, qRaftWater.z / 1.9));
                 float raftPerimeterDist = abs(distRaftCenter - 1.0);
                 if (abs(qRaftWater.y) < 0.6 && raftPerimeterDist < 0.35) {
@@ -864,7 +856,8 @@
         const uZoom = gl.getUniformLocation(program, 'u_zoom');
         const uRoughness = gl.getUniformLocation(program, 'u_roughness');
         const uShipPos = gl.getUniformLocation(program, 'u_ship_pos');
-        const uShipRot = gl.getUniformLocation(program, 'u_ship_rot');
+        const uShipMat = gl.getUniformLocation(program, 'u_ship_mat');
+        const uShipInvMat = gl.getUniformLocation(program, 'u_ship_inv_mat');
         const uShipSpeed = gl.getUniformLocation(program, 'u_ship_speed');
 
         let mouseX = 0.5, mouseY = 0.5;
@@ -1073,7 +1066,28 @@
             const raftRoll = Math.atan(dx) * 0.7;   // Roulis le long de la pente
             const raftY = waveY + 0.25;
 
-            // Envoi des uniformes WebGL (u_ship_rot : [yaw, pitch, roll])
+            // Calcul de la matrice de rotation 3D (Yaw, Pitch, Roll)
+            const cy = Math.cos(-raftYaw), sy = Math.sin(-raftYaw);
+            const cp = Math.cos(-raftPitch), sp = Math.sin(-raftPitch);
+            const cr = Math.cos(-raftRoll), sr = Math.sin(-raftRoll);
+
+            const m00 = cy * cr + sy * sp * sr, m01 = cp * sr, m02 = -sy * cr + cy * sp * sr;
+            const m10 = -cy * sr + sy * sp * cr, m11 = cp * cr, m12 = sy * sr + cy * sp * cr;
+            const m20 = sy * cp, m21 = -sp, m22 = cy * cp;
+
+            const shipMat = new Float32Array([
+                m00, m10, m20,
+                m01, m11, m21,
+                m02, m12, m22
+            ]);
+
+            const shipInvMat = new Float32Array([
+                m00, m01, m02,
+                m10, m11, m12,
+                m20, m21, m22
+            ]);
+
+            // Envoi des uniformes WebGL
             gl.uniform2f(uRes, canvas.width, canvas.height);
             gl.uniform1f(uTime, t);
             gl.uniform2f(uMouse, mouseX, mouseY);
@@ -1081,7 +1095,8 @@
             gl.uniform1f(uRoughness, currentRoughness);
 
             gl.uniform3f(uShipPos, raftX, raftY, raftZ);
-            gl.uniform3f(uShipRot, raftYaw, raftPitch, raftRoll);
+            gl.uniformMatrix3fv(uShipMat, false, shipMat);
+            gl.uniformMatrix3fv(uShipInvMat, false, shipInvMat);
             gl.uniform1f(uShipSpeed, raftActualSpeed);
 
             gl.drawArrays(gl.TRIANGLES, 0, 6);
