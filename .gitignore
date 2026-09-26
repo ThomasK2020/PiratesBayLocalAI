@@ -5,3 +5,4 @@ workspace/*
 !workspace/.gitkeep
 .DS_Store
 *.swp
+*.tar.gz
