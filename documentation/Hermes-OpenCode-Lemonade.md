@@ -141,12 +141,15 @@ Dans votre session Hermes, la compétence spécialisée `opencode` doit être di
   ```
   Le retour doit contenir `OPENCODE_SMOKE_OK` sans erreur de provider ou de modèle.
 
-### C. Consignes Types pour ordonner à Hermes de coder via OpenCode
-Dans le chat avec Hermes, donnez une consigne directive :
-> *"Lis `AGENTS.md` et `StatementOfWork/SOW_BUOY_PHYSICS.md`. Délègue l'implémentation de la fonction d'amortissement à OpenCode dans le répertoire `./workspace` avec Qwen Coder local. Lance ensuite les tests unitaires dans le conteneur Docker `pirates-bay-sandbox` et fais-moi un rapport."*
+### C. Prompt Type Hermes pour Piloter la Chaîne SOW Complète
+Dans le chat avec Hermes, donnez une consigne directive pour exécuter un SOW de bout en bout :
 
-Hermes exécutera alors en tâche de fond :
-```bash
-opencode run 'Implémente la physique de flottaison selon SOW_BUOY_PHYSICS.md' -f AGENTS.md
-```
-OpenCode produira le code en local via Qwen Coder sans saturer la VRAM, tandis que Hermes supervisera la qualité et le cycle de vie git.
+> *"Consulte AGENTS.md et le fichier StatementOfWork/<NOM_DU_SOW>.md. Transfère à OpenCode CLI via 'opencode run --auto' pour implémenter dans ./workspace/pirates_bay_caribbean.html les spécifications fonctionnelles (SF-01 à SF-0N). Crée la suite de tests ./workspace/test_<fonctionnalite>.py, valide l'exécution avec pytest dans le conteneur Docker pirates-bay-sandbox, puis synchronise les fichiers modifiés vers la racine, le dépôt Git principal et le Vault Obsidian."*
+
+---
+
+## 📂 Index des Cahiers des Charges (SOW) Déployés
+
+- `StatementOfWork/SOW_BUOY_PHYSICS.md` : Flottaison physique multi-points sur la houle, gradients $dz/dx$, tangage & roulis.
+- `StatementOfWork/SOW_BUOY_RED_YELLOW_STRIPES.md` : Shading procédural GLSL à 8 secteurs alternés rouge/jaune type flotteur SOLAS.
+- `StatementOfWork/SOW_SHARK_NAVIGATION.md` : Patrouille d'ailerons de requins réalistes (0.85m), zone d'exclusion ($3.5\text{m}$), contrôles UI et Motion design d'arrivée/départ.

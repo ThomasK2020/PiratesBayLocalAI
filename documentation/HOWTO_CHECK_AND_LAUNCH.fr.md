@@ -55,23 +55,17 @@ DISPLAY=:0 google-chrome --ignore-gpu-blocklist --disable-background-networking 
 *Dès qu'une modification de code est effectuée, rafraîchissez simplement la page (`F5`).*
 
 > [!IMPORTANT]
-> ### ↺ Gestion des Versions & Procédure de Rollback (`v2.00` / `v3.00` / `v3.50`)
+> ### ↺ Versions Stables Nommées & Procédure de Rollback
 > 
-> Dans Git, chaque version étiquetée (`v2.00`, `v3.00`, `v3.50`, etc.) est un **instantané immuable et permanent**. Vous pouvez consulter, reprendre ou effectuer un rollback vers une version spécifique à tout moment :
+> Dans Git, chaque étape importante du projet est étiquetée par une version immuable :
 > 
-> * **Consulter / Tester une version antérieure (ex: `v2.00`) :**
->   ```bash
->   git checkout v2.00
->   ```
-> * **Créer une branche de travail à partir d'une version antérieure :**
->   ```bash
->   git checkout -b reprise-v2 v2.00
->   ```
-> * **Effectuer un Rollback complet de la branche `main` vers la `v2.00` :**
->   ```bash
->   git reset --hard v2.00
->   git push -f origin main
->   ```
+> | Tag Version | Nom & Description | Commande de Basculement |
+> | :--- | :--- | :--- |
+> | **`v3.50`** | 🟡 **Bouée Jaune Uni** (Flottaison Hydrodynamique Multi-points) | `git checkout v3.50` |
+> | **`v3.60-stripes`** | 🔴🟡 **Bouée à Bandes Rouges & Jaunes** (Stripes SOLAS) | `git checkout v3.60-stripes` |
+> | **`v3.70-sharks`** | 🦈 **Patrouille de Requins Réalistes** (0.85m + UI + Motion Design) | `git checkout v3.70-sharks` |
+> 
+> *Pour revenir à la branche principale active à tout moment :* `git checkout main`
 
 ---
 
