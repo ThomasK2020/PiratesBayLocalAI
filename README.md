@@ -2,37 +2,28 @@
 
 Environnement de prototypage et de développement sécurisé, conteneurisé et orchestré pour l'assistance par IA locale (**OpenCode CLI**, **Hermes Agent** et **Qwen Coder**).
 
-### 🖥️ Lancement de la Démo 3D (Serveur HTTP Local - Recommandé)
-Pour éviter les erreurs de gestion d'image partagée Skia (`SharedImageManager`) liées au protocole `file://` sous Linux Vulkan/ANGLE :
-
-1. **Démarrer le serveur HTTP local (Port 8888) :**
-   ```bash
-   python3 -m http.server 8888 --directory $(pwd) &
-   ```
-
-2. **Lancer Chrome avec l'accélération GPU AMD OpenGL (Sans blocage Vulkan) :**
-   * **Mode Application (Recommandé) :**
-     ```bash
-     DISPLAY=:0 google-chrome --ignore-gpu-blocklist --disable-background-networking --app="http://localhost:8888/pirates_bay_caribbean.html" &>/dev/null &
-     ```
-   * **Version Prototypée (`./workspace`) :**
-     ```bash
-     DISPLAY=:0 google-chrome --ignore-gpu-blocklist --disable-background-networking --app="http://localhost:8888/workspace/pirates_bay_caribbean.html" &>/dev/null &
-     ```
+> [!NOTE]
+> ### 🚀 Guide de Lancement Rapide en Local
+> Pour démarrer l'application 3D WebGL immédiatement sur votre machine :
+> 
+> ```bash
+> cd PiratesBayLocalAI
+> ./launch-dev.sh --demo --chrome
+> ```
+> *Le script `./launch-dev.sh` gère automatiquement l'activation du serveur HTTP local (Port 8888) et l'ouverture de Google Chrome avec accélération GPU AMD OpenGL.*
 
 > [!IMPORTANT]
-> ### ↺ Gestion des Versions & Procédure de Rollback (v3.50 / v3.60)
+> ### ↺ Versions Stables Nommées & Commandes de Basculement
 > 
-> Dans Git, chaque version étiquetée (`v2.00`, `v3.00`, `v3.50`, `v3.60`, etc.) est un **instantané immuable et permanent**. Vous pouvez consulter, tester ou effectuer un rollback vers une version spécifique à tout moment :
+> Dans ce dépôt Git, chaque grande étape est étiquetée par une version immuable :
 > 
-> * **Consulter / Tester la version stable précédente (`v3.50`) :**
->   ```bash
->   git checkout v3.50
->   ```
->   *(Pour revenir à la version actuelle `v3.60` : `git checkout main`)*
+> | Version Tag | Désignation & Description | Commande de Basculement |
+> | :--- | :--- | :--- |
+> | **`v3.50`** | 🟡 **Bouée Jaune Uni** (Flottaison Hydrodynamique Stable) | `git checkout v3.50` |
+> | **`v3.60-stripes`** | 🔴🟡 **Bouée à Bandes Rouges & Jaunes** (Stripes SOLAS) | `git checkout v3.60-stripes` |
+> | **`v3.70-sharks`** | 🦈 **Patrouille de Requins Réalistes** (Taille 0.85m + UI + Motion Design) | `git checkout v3.70-sharks` |
 > 
-> * **Créer une branche de travail à partir de `v3.50` :**
->   ```bash
+> *Pour revenir à la branche principale active à tout moment :* `git checkout main`
 >   git checkout -b fix-v3.50 v3.50
 >   ```
 > 
