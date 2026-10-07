@@ -201,6 +201,19 @@
                 <label for="roughness">🌊 Mer : <span id="roughness-label" class="val-badge">Calme</span></label>
                 <input type="range" id="roughness" min="0.2" max="2.0" step="0.05" value="0.5">
             </div>
+
+            <!-- Contrôle Patrouille Requins -->
+            <div class="control-item">
+                <label for="shark-nb">🦈 Patrouille Requins :</label>
+                <div class="quick-nav-btns">
+                    <select id="shark-nb" class="select-nav" style="background: rgba(0,210,255,0.1); color: #00d2ff; border: 1px solid rgba(0,210,255,0.3); padding: 4px 8px; border-radius: 6px; font-weight: 600; font-size: 0.8rem; cursor: pointer;">
+                        <option value="1" style="background:#020a14;">1 Requin</option>
+                        <option value="3" selected style="background:#020a14;">3 Requins</option>
+                        <option value="5" style="background:#020a14;">5 Requins</option>
+                    </select>
+                    <button class="btn-nav" id="btn-shark-toggle" style="color:#00f0ff;" title="Activer/Désactiver la patrouille de requins">🦈 Requins : ON</button>
+                </div>
+            </div>
         </div>
 
         <div class="stats-group">
@@ -236,6 +249,9 @@
         uniform mat3 u_ship_mat;       // Matrice 3D Monde -> Radeau
         uniform mat3 u_ship_inv_mat;   // Matrice 3D Radeau -> Monde
         uniform float u_ship_speed;    // Vitesse effective de déplacement (-1.0 à 1.0)
+        uniform vec3 u_sharks[5];      // Positions des requins (X, Y, Z)
+        uniform float u_shark_yaws[5]; // Cap de chaque requin
+        uniform int u_shark_count;     // Nombre de requins actifs
 
         #define PI 3.14159265359
 
@@ -393,6 +409,54 @@
             float d3 = max(r3, h3) - fbm3(q3 * 0.35) * 3.0;
 
             return min(min(d1, d2), d3);
+        }
+
+        // =========================================================================
+        // AILERON DE REQUIN RÉALISTE (SDF sd_shark_fin)
+        // =========================================================================
+        float sd_shark_fin(vec3 p) {
+            vec3 q = p;
+            q.z -= pow(max(q.y, 0.0), 1.25) * 0.42;
+            
+            float thickness = mix(0.12, 0.008, clamp(q.y / 0.85, 0.0, 1.0));
+            float dThick = abs(q.x) - thickness;
+            
+            float dFront = q.z + q.y * 0.48 - 0.22;
+            float dBack = -q.z + q.y * 0.35 - 0.38;
+            float dHeight = q.y - 0.85;
+            
+            float dShape = max(max(max(dThick, dFront), dBack), dHeight);
+            return max(dShape, -q.y) * 0.8;
+        }
+
+        float raymarchSharks(vec3 ro, vec3 rd, float maxDist, out int hitIndex) {
+            hitIndex = -1;
+            float minDist = maxDist;
+            for (int k = 0; k < 5; k++) {
+                if (k >= u_shark_count) break;
+                vec3 sPos = u_sharks[k];
+                if (sPos.y < -1.5) continue;
+                
+                float syaw = u_shark_yaws[k];
+                vec3 q = ro - sPos;
+                q.xz = rot2D(-syaw) * q.xz;
+                
+                float t = 0.0;
+                for (int i = 0; i < 24; i++) {
+                    vec3 p = q + rd * t;
+                    float d = sd_shark_fin(p);
+                    if (d < 0.008) {
+                        if (t < minDist) {
+                            minDist = t;
+                            hitIndex = k;
+                        }
+                        break;
+                    }
+                    t += d;
+                    if (t > 15.0) break;
+                }
+            }
+            return minDist;
         }
 
         // =========================================================================
@@ -650,10 +714,34 @@
             vec3 raftLocalP = vec3(0.0);
             float distRaft = raymarchRaft(ro, rd, min(distSea, distIsland), raftMat, raftLocalP);
 
-            // =====================================================================
-            // RENDU DU RADEAU DE SECOURS (ORANGE PASTEL HAUTE VISIBILITÉ)
-            // =====================================================================
-            if (distRaft < distSea && distRaft < distIsland && distRaft < 125.0) {
+            // 4. Raymarching des Ailerons de Requins
+            int sharkHitIdx = -1;
+            float distShark = raymarchSharks(ro, rd, min(distSea, distIsland), sharkHitIdx);
+
+            if (sharkHitIdx >= 0 && distShark < distRaft && distShark < distSea && distShark < distIsland) {
+                vec3 p = ro + rd * distShark;
+                vec3 sPos = u_sharks[sharkHitIdx];
+                float syaw = u_shark_yaws[sharkHitIdx];
+                vec3 q = ro - sPos + rd * distShark;
+                q.xz = rot2D(-syaw) * q.xz;
+                
+                vec2 e = vec2(0.005, 0.0);
+                vec3 nLocal = normalize(vec3(
+                    sd_shark_fin(q + e.xyy) - sd_shark_fin(q - e.xyy),
+                    sd_shark_fin(q + e.yxy) - sd_shark_fin(q - e.yxy),
+                    sd_shark_fin(q + e.yyx) - sd_shark_fin(q - e.yyx)
+                ));
+                vec3 n = nLocal;
+                n.xz = rot2D(syaw) * n.xz;
+                
+                float diff = max(dot(n, sunDir), 0.0);
+                vec3 sharkBase = vec3(0.14, 0.18, 0.22);
+                col = sharkBase * (0.35 + 0.65 * diff) + vec3(0.1, 0.2, 0.3) * max(n.y, 0.0);
+                
+                vec3 ref = reflect(rd, n);
+                float spec = pow(max(dot(ref, sunDir), 0.0), 24.0);
+                col += vec3(0.8, 0.9, 1.0) * spec * 0.4;
+            } else if (distRaft < distSea && distRaft < distIsland && distRaft < 125.0) {
                 vec3 p = ro + rd * distRaft;
                 vec3 q = raftLocalP;
                 vec3 localN = getRaftNormal(q);
@@ -824,6 +912,21 @@
                     col = mix(col, SHORE_FOAM, clamp(foamRing * foamNoise * speedFactor * 0.70, 0.0, 0.80));
                 }
 
+                // Sillage d'écume des ailerons de requins en mouvement
+                for (int k = 0; k < 5; k++) {
+                    if (k >= u_shark_count) break;
+                    vec3 sPos = u_sharks[k];
+                    if (sPos.y < -1.5) continue;
+                    vec3 qSharkWater = seaP - sPos;
+                    qSharkWater.xz = rot2D(-u_shark_yaws[k]) * qSharkWater.xz;
+                    
+                    float dSharkCenter = length(vec2(qSharkWater.x / 0.25, (qSharkWater.z + 0.2) / 0.8));
+                    if (dSharkCenter < 1.2 && abs(qSharkWater.y) < 0.8) {
+                        float foam = smoothstep(1.2, 0.0, dSharkCenter) * (0.5 + 0.5 * noise(qSharkWater.xz * 8.0));
+                        col = mix(col, SHORE_FOAM, clamp(foam * 0.75, 0.0, 0.85));
+                    }
+                }
+
                 vec3 oceanHorizonHaze = vec3(0.03, 0.12, 0.28);
                 col = mix(col, oceanHorizonHaze, smoothstep(30.0, 130.0, distSea));
 
@@ -875,6 +978,9 @@
         const uShipMat = gl.getUniformLocation(program, 'u_ship_mat');
         const uShipInvMat = gl.getUniformLocation(program, 'u_ship_inv_mat');
         const uShipSpeed = gl.getUniformLocation(program, 'u_ship_speed');
+        const uSharksLoc = gl.getUniformLocation(program, 'u_sharks');
+        const uSharkYawsLoc = gl.getUniformLocation(program, 'u_shark_yaws');
+        const uSharkCountLoc = gl.getUniformLocation(program, 'u_shark_count');
 
         let mouseX = 0.5, mouseY = 0.5;
         let targetMouseX = 0.5, targetMouseY = 0.5;
@@ -987,11 +1093,126 @@
             const amp = 1.05 * roughness;
             const speed = 0.65 + (roughness - 0.2) * 0.33;
             const t = time * speed;
-            // Approximation de la houle principale
             const w1 = Math.sin((x * 0.92 - z * 0.38) * freq + 0.88 * t * 1.05);
             const w2 = Math.sin((x * 0.38 + z * 0.92) * freq * 1.15 - 0.58 * t * 0.90);
             return (w1 + w2) * amp * 0.45;
         }
+
+        // =========================================================================
+        // MOTION DESIGN & NAVIGATION DES REQUINS (PATROUILLE AI & EXCLUSION)
+        // =========================================================================
+        const sharkNbSelect = document.getElementById('shark-nb');
+        const btnSharkToggle = document.getElementById('btn-shark-toggle');
+
+        let isSharkOn = true;
+        let activeSharkTargetCount = parseInt(sharkNbSelect ? sharkNbSelect.value : "3") || 3;
+
+        if (sharkNbSelect) {
+            sharkNbSelect.addEventListener('change', (e) => {
+                activeSharkTargetCount = parseInt(e.target.value) || 3;
+            });
+        }
+
+        if (btnSharkToggle) {
+            btnSharkToggle.addEventListener('click', () => {
+                isSharkOn = !isSharkOn;
+                if (isSharkOn) {
+                    btnSharkToggle.textContent = '🦈 Requins : ON';
+                    btnSharkToggle.style.color = '#00f0ff';
+                } else {
+                    btnSharkToggle.textContent = '🦈 Requins : OFF';
+                    btnSharkToggle.style.color = '#ff4a4a';
+                }
+            });
+        }
+
+        class Shark {
+            constructor(id) {
+                this.id = id;
+                const baseAngle = (id / 5.0) * Math.PI * 2.0;
+                this.x = Math.sin(baseAngle) * 25.0;
+                this.z = Math.cos(baseAngle) * 25.0;
+                this.y = -2.0;
+                this.yaw = baseAngle + Math.PI;
+                this.speed = 2.4;
+                this.state = 'APPROACHING'; // OFFSCREEN, APPROACHING, PATROLLING, DEPARTING
+            }
+
+            update(dt, timeSec, raftX, raftZ, allSharks) {
+                const isTargetActive = isSharkOn && (this.id < activeSharkTargetCount);
+                const distToRaft = Math.hypot(this.x - raftX, this.z - raftZ);
+
+                if (!isTargetActive) {
+                    this.state = 'DEPARTING';
+                } else if (this.state === 'DEPARTING' || this.state === 'OFFSCREEN') {
+                    this.state = 'APPROACHING';
+                }
+
+                if (this.state === 'APPROACHING' && distToRaft < 8.5) {
+                    this.state = 'PATROLLING';
+                }
+
+                let desiredVx = 0.0, desiredVz = 0.0;
+                const angleToRaft = Math.atan2(this.z - raftZ, this.x - raftX);
+
+                if (this.state === 'DEPARTING') {
+                    desiredVx = (this.x - raftX);
+                    desiredVz = (this.z - raftZ);
+                    if (distToRaft > 26.0) this.state = 'OFFSCREEN';
+                } else if (distToRaft < 3.5) {
+                    // ZONE D'EXCLUSION STRICTE (R < 3.5m)
+                    desiredVx = (this.x - raftX) * 2.2 - Math.sin(angleToRaft) * 1.5;
+                    desiredVz = (this.z - raftZ) * 2.2 + Math.cos(angleToRaft) * 1.5;
+                } else {
+                    // Patrouille orbitale fluide autour du radeau (R_min 3.5m à R_max 8.5m)
+                    const R_patrol = 5.2 + (this.id % 3) * 1.1;
+                    const tangentX = -Math.sin(angleToRaft);
+                    const tangentZ = Math.cos(angleToRaft);
+
+                    const radialCorrection = (R_patrol - distToRaft) * 0.5;
+                    const radialX = (this.x - raftX) / (distToRaft || 1.0);
+                    const radialZ = (this.z - raftZ) / (distToRaft || 1.0);
+
+                    desiredVx = tangentX * 2.4 + radialX * radialCorrection;
+                    desiredVz = tangentZ * 2.4 + radialZ * radialCorrection;
+                }
+
+                // Anti-collision entre requins
+                for (let other of allSharks) {
+                    if (other.id !== this.id && other.state !== 'OFFSCREEN') {
+                        const dOther = Math.hypot(this.x - other.x, this.z - other.z);
+                        if (dOther < 2.5 && dOther > 0.01) {
+                            desiredVx += ((this.x - other.x) / dOther) * 1.8;
+                            desiredVz += ((this.z - other.z) / dOther) * 1.8;
+                        }
+                    }
+                }
+
+                const targetYaw = Math.atan2(desiredVx, desiredVz);
+                let dYaw = targetYaw - this.yaw;
+                while (dYaw < -Math.PI) dYaw += Math.PI * 2.0;
+                while (dYaw > Math.PI) dYaw -= Math.PI * 2.0;
+                this.yaw += dYaw * Math.min(dt * 3.2, 1.0);
+
+                const currentSpeed = (this.state === 'OFFSCREEN') ? 0.0 : 2.5;
+                this.x += Math.sin(this.yaw) * currentSpeed * dt;
+                this.z += Math.cos(this.yaw) * currentSpeed * dt;
+
+                // Flottaison sur la houle avec immersion progressive au départ
+                if (this.state === 'OFFSCREEN') {
+                    this.y = -3.0;
+                } else if (this.state === 'DEPARTING' && distToRaft > 18.0) {
+                    const fade = Math.min((distToRaft - 18.0) / 7.0, 1.0);
+                    const waveY = getWaveHeight(this.x, this.z, timeSec, currentRoughness);
+                    this.y = waveY * (1.0 - fade) - 2.5 * fade;
+                } else {
+                    const waveY = getWaveHeight(this.x, this.z, timeSec, currentRoughness);
+                    this.y = waveY + 0.05;
+                }
+            }
+        }
+
+        const sharkAgents = Array.from({ length: 5 }, (_, i) => new Shark(i));
 
         window.addEventListener('mousedown', (e) => {
             if (!e.target.closest('#header')) isMouseDown = true;
@@ -1117,6 +1338,24 @@
             gl.uniformMatrix3fv(uShipMat, false, shipMat);
             gl.uniformMatrix3fv(uShipInvMat, false, shipInvMat);
             gl.uniform1f(uShipSpeed, raftActualSpeed);
+
+            // Simulation & Envoi des Requins
+            const sharksArray = new Float32Array(15);
+            const sharkYawsArray = new Float32Array(5);
+
+            for (let i = 0; i < 5; i++) {
+                const shark = sharkAgents[i];
+                shark.update(dt, t, raftX, raftZ, sharkAgents);
+
+                sharksArray[i * 3] = shark.x;
+                sharksArray[i * 3 + 1] = shark.y;
+                sharksArray[i * 3 + 2] = shark.z;
+                sharkYawsArray[i] = shark.yaw;
+            }
+
+            gl.uniform3fv(uSharksLoc, sharksArray);
+            gl.uniform1fv(uSharkYawsLoc, sharkYawsArray);
+            gl.uniform1i(uSharkCountLoc, 5);
 
             gl.drawArrays(gl.TRIANGLES, 0, 6);
             requestAnimationFrame(render);
