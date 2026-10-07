@@ -26,14 +26,6 @@ Environnement de prototypage et de développement sécurisé, conteneurisé et o
 > | **`v3.70-sharks`** | 🦈 **Patrouille de Requins Réalistes** (Taille 0.85m + UI + Motion Design) | `git checkout v3.70-sharks` |
 > 
 > *Pour revenir à la branche principale active à tout moment :* `git checkout main`
->   git checkout -b fix-v3.50 v3.50
->   ```
-> 
-> * **Effectuer un Rollback complet de la branche `main` vers la `v3.50` :**
->   ```bash
->   git reset --hard v3.50
->   git push -f origin main
->   ```
 
 ---
 
@@ -111,22 +103,24 @@ Assurez-vous que votre instance OpenCode est reliée au moteur LLM local **Lemon
 ```text
 PiratesBayLocalAI/
 ├── README.md                  <- Guide d'installation et documentation
+├── README.fr.md               <- Version française
+├── README.en.md               <- Version anglaise
 ├── check-environment.sh       <- Script de vérification de l'environnement système
 ├── node-agent.sh              <- Démon / Agent d'auto-réparation & pilotage distant
 ├── StatementOfWork/
-│   └── SOW_BUOY_PHYSICS.md    <- Cahier des charges technico-fonctionnel (Physique Bouée)
+│   ├── SOW_BUOY_PHYSICS.md    <- Cahier des charges (Physique Bouée)
+│   ├── SOW_BUOY_RED_YELLOW_STRIPES.md <- Cahier des charges (Bandes SOLAS)
+│   └── SOW_SHARK_NAVIGATION.md<- Cahier des charges (Patrouille Requins)
 ├── documentation/
-│   ├── HOWTO_CHECK_AND_LAUNCH.md  <- Guide pas à pas d'installation & démo (FR / EN)
-│   ├── Hermes-OpenCode-Lemonade.md<- Architecture Hybride (Gemini Brain + Qwen Code)
-│   └── Troubleshooting-errors.md  <- Guide de diagnostic & résolution des erreurs IA
+│   ├── HOWTO_CHECK_AND_LAUNCH.fr.md <- Guide pas à pas d'installation & démo (FR)
+│   ├── HOWTO_CHECK_AND_LAUNCH.en.md <- Guide pas à pas d'installation & démo (EN)
+│   ├── Hermes-OpenCode-Lemonade.md  <- Architecture Hybride (Gemini Brain + Qwen Code)
+│   └── Troubleshooting-errors.md    <- Guide de diagnostic & résolution des erreurs IA
 ├── AGENTS.md                  <- Consignes et règles pour OpenCode / Hermes Agent
 ├── Dockerfile                 <- Python 3.11-slim + Node.js 20 LTS + Git/Curl
 ├── docker-compose.yml         <- Configuration du conteneur sandbox bridé
 ├── requirements.txt           <- Dépendances Python pour le sandbox (pytest, etc.)
-├── .gitignore                 <- Fichiers ignorés par Git
-├── pirates_bay_caribbean.html <- Application / Interface Web
-├── artifacts/                 <- Ressources graphiques (ex: piratebay3D.xcf)
-├── backups/                   <- Fichiers de sauvegarde de secours
+├── pirates_bay_caribbean.html <- Application / Interface WebGL 3D
 └── workspace/                 <- Répertoire de travail pour le dev & prototypage IA
 ```
 
