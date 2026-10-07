@@ -59,24 +59,22 @@ Le projet **Pirates Bay Local AI** fournit une sandbox de développement isolée
 
 ---
 
-## 💻 Configuration & Installation
+## 💻 Configuration & Installation Rapide
 
-### Step 1 : Cloner le dépôt et vérifier l'environnement
+### Step 1 : Cloner le dépôt
 ```bash
 git clone https://github.com/ThomasK2020/PiratesBayLocalAI.git
 cd PiratesBayLocalAI
-chmod +x check-environment.sh
-./check-environment.sh
 ```
 
-### Step 2 : Lancer le conteneur Sandbox Docker
+### Step 2 : Lancer le conteneur Sandbox Docker (pour pytest)
 ```bash
 docker compose up -d --build
 ```
-Le conteneur `pirates-bay-sandbox` démarrera en arrière-plan avec le volume `./workspace` prêt à recevoir le code.
+*Le conteneur `pirates-bay-sandbox` s'exécute en arrière-plan avec le volume `./workspace` prêt à recevoir le code et isolé à 4 Go de RAM.*
 
 ### Step 3 : Configurer OpenCode CLI (`~/.config/opencode/config.json`)
-Créez ou mettez à jour votre fichier de configuration OpenCode hôte :
+Assurez-vous que votre instance OpenCode est reliée au moteur LLM local **Lemonade** (port `13305`) :
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
@@ -98,17 +96,11 @@ Créez ou mettez à jour votre fichier de configuration OpenCode hôte :
 }
 ```
 
-### Step 4 : Lancer la Session de Livecoding (`launch-dev.sh`)
+### Step 4 : Lancer l'application WebGL en local
 ```bash
-# Lancement standard (Démarre la sandbox Docker, le serveur HTTP :8888 et ouvre Chrome GPU automatiquement) :
-./launch-dev.sh
-
-# Lancement avec configuration et démarrage de session Hermes Agent :
-./launch-dev.sh --hermes
-
-# Lancement sans interface graphique Chrome (mode headless) :
-./launch-dev.sh --no-chrome
+./launch-dev.sh --demo --chrome
 ```
+*Le script démarre automatiquement le serveur local `http://localhost:8888` et ouvre Google Chrome avec l'accélération matérielle GPU AMD OpenGL.*
 
 ---
 
