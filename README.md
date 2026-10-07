@@ -140,12 +140,20 @@ PiratesBayLocalAI/
 
 ## 🧪 Utilisation avec OpenCode & Hermes Agent
 
-1. Positionnez-vous dans le projet :
-   ```bash
-   cd PiratesBayLocalAI
-   ```
-2. Lancez OpenCode CLI :
-   ```bash
-   opencode
-   ```
-3. L'agent lira automatiquement `AGENTS.md` et générera/exécutera son code de prototypage exclusivement dans le dossier `./workspace`.
+Le projet `PiratesBayLocalAI` repose sur une **architecture hybride bi-niveau** :
+- **Hermes Agent (Raisonnement & Supervision) :** Pilote la stratégie globale, analyse les cahiers des charges (SOW), formule les prompts d'ingénierie, orchestre le conteneur Docker Sandbox et gère la synchronisation Git / Obsidian Vault.
+- **OpenCode CLI & Qwen Coder (Inférence Code Locale / Lemonade Port 13305) :** Exécute la génération, le patching de shaders GLSL ES 3.0 / JavaScript et la création des suites de tests unitaires `pytest` dans le volume isolé `./workspace/`.
+
+### ⚡ 1. Prompt Type Hermes pour Piloter la Chaîne Complète
+
+Pour exécuter un SOW de bout en bout (développement, tests sandbox, déploiement et vault Obsidian) directement depuis la discussion Hermes :
+
+> *"Consulte AGENTS.md et le fichier StatementOfWork/<NOM_DU_SOW>.md. Transfère à OpenCode CLI via 'opencode run --auto' pour implémenter dans ./workspace/pirates_bay_caribbean.html les spécifications fonctionnelles (SF-01 à SF-0N). Crée la suite de tests ./workspace/test_<fonctionnalite>.py, valide l'exécution avec pytest dans le conteneur Docker pirates-bay-sandbox, puis synchronise les fichiers modifiés vers la racine, le dépôt Git principal et le Vault Obsidian."*
+
+---
+
+### 📂 2. Index des Cahiers des Charges (SOW) Disponibles
+
+- `StatementOfWork/SOW_BUOY_PHYSICS.md` : Flottaison physique multi-points, gradients de houle $dz/dx$, tangage & roulis.
+- `StatementOfWork/SOW_BUOY_RED_YELLOW_STRIPES.md` : Shading procédural GLSL à 8 secteurs alternés rouge/jaune SOLAS.
+- `StatementOfWork/SOW_SHARK_NAVIGATION.md` : Patrouille d'ailerons de requins réalistes (0.85m), zone d'exclusion ($3.5\text{m}$), contrôles UI et Motion design d'arrivée/départ.
