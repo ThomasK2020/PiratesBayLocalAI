@@ -24,6 +24,7 @@ Environnement de prototypage et de développement sécurisé, conteneurisé et o
 > | **`v3.50`** | 🟡 **Bouée Jaune Uni** (Flottaison Hydrodynamique Stable) | `git checkout v3.50` |
 > | **`v3.60-stripes`** | 🔴🟡 **Bouée à Bandes Rouges & Jaunes** (Stripes SOLAS) | `git checkout v3.60-stripes` |
 > | **`v3.70-sharks`** | 🦈 **Patrouille de Requins Réalistes** (Taille 0.85m + UI + Motion Design) | `git checkout v3.70-sharks` |
+| **`v3.80-seagulls`** | 🕊️ **Volée de Mouettes Marines** (Boids Flocking + UI + Motion Design) | `git checkout v3.80-seagulls` |
 > 
 > *Pour revenir à la branche principale active à tout moment :* `git checkout main`
 >   git checkout -b fix-v3.50 v3.50
@@ -151,3 +152,4 @@ Pour exécuter un SOW de bout en bout (développement, tests sandbox, déploieme
 - `StatementOfWork/SOW_BUOY_PHYSICS.md` : Flottaison physique multi-points, gradients de houle $dz/dx$, tangage & roulis.
 - `StatementOfWork/SOW_BUOY_RED_YELLOW_STRIPES.md` : Shading procédural GLSL à 8 secteurs alternés rouge/jaune SOLAS.
 - `StatementOfWork/SOW_SHARK_NAVIGATION.md` : Patrouille d'ailerons de requins réalistes (0.85m), zone d'exclusion ($3.5\text{m}$), contrôles UI et Motion design d'arrivée/départ.
+- `StatementOfWork/SOW_SEAGULL_FLOCK.md` : Volée de mouettes marines en formation Boids, altitude $Y \in [4.5\text{m}, 9.0\text{m}]$, contrôles UI et Motion design d'arrivée/dispersion.

@@ -24,8 +24,17 @@ Environnement de prototypage et de développement sécurisé, conteneurisé et o
 > | **`v3.50`** | 🟡 **Bouée Jaune Uni** (Flottaison Hydrodynamique Stable) | `git checkout v3.50` |
 > | **`v3.60-stripes`** | 🔴🟡 **Bouée à Bandes Rouges & Jaunes** (Stripes SOLAS) | `git checkout v3.60-stripes` |
 > | **`v3.70-sharks`** | 🦈 **Patrouille de Requins Réalistes** (Taille 0.85m + UI + Motion Design) | `git checkout v3.70-sharks` |
+| **`v3.80-seagulls`** | 🕊️ **Volée de Mouettes Marines** (Boids Flocking + UI + Motion Design) | `git checkout v3.80-seagulls` |
 > 
 > *Pour revenir à la branche principale active à tout moment :* `git checkout main`
+>   git checkout -b fix-v3.50 v3.50
+>   ```
+> 
+> * **Effectuer un Rollback complet de la branche `main` vers la `v3.50` :**
+>   ```bash
+>   git reset --hard v3.50
+>   git push -f origin main
+>   ```
 
 ---
 
@@ -103,24 +112,22 @@ Assurez-vous que votre instance OpenCode est reliée au moteur LLM local **Lemon
 ```text
 PiratesBayLocalAI/
 ├── README.md                  <- Guide d'installation et documentation
-├── README.fr.md               <- Version française
-├── README.en.md               <- Version anglaise
 ├── check-environment.sh       <- Script de vérification de l'environnement système
 ├── node-agent.sh              <- Démon / Agent d'auto-réparation & pilotage distant
 ├── StatementOfWork/
-│   ├── SOW_BUOY_PHYSICS.md    <- Cahier des charges (Physique Bouée)
-│   ├── SOW_BUOY_RED_YELLOW_STRIPES.md <- Cahier des charges (Bandes SOLAS)
-│   └── SOW_SHARK_NAVIGATION.md<- Cahier des charges (Patrouille Requins)
+│   └── SOW_BUOY_PHYSICS.md    <- Cahier des charges technico-fonctionnel (Physique Bouée)
 ├── documentation/
-│   ├── HOWTO_CHECK_AND_LAUNCH.fr.md <- Guide pas à pas d'installation & démo (FR)
-│   ├── HOWTO_CHECK_AND_LAUNCH.en.md <- Guide pas à pas d'installation & démo (EN)
-│   ├── Hermes-OpenCode-Lemonade.md  <- Architecture Hybride (Gemini Brain + Qwen Code)
-│   └── Troubleshooting-errors.md    <- Guide de diagnostic & résolution des erreurs IA
+│   ├── HOWTO_CHECK_AND_LAUNCH.md  <- Guide pas à pas d'installation & démo (FR / EN)
+│   ├── Hermes-OpenCode-Lemonade.md<- Architecture Hybride (Gemini Brain + Qwen Code)
+│   └── Troubleshooting-errors.md  <- Guide de diagnostic & résolution des erreurs IA
 ├── AGENTS.md                  <- Consignes et règles pour OpenCode / Hermes Agent
 ├── Dockerfile                 <- Python 3.11-slim + Node.js 20 LTS + Git/Curl
 ├── docker-compose.yml         <- Configuration du conteneur sandbox bridé
 ├── requirements.txt           <- Dépendances Python pour le sandbox (pytest, etc.)
-├── pirates_bay_caribbean.html <- Application / Interface WebGL 3D
+├── .gitignore                 <- Fichiers ignorés par Git
+├── pirates_bay_caribbean.html <- Application / Interface Web
+├── artifacts/                 <- Ressources graphiques (ex: piratebay3D.xcf)
+├── backups/                   <- Fichiers de sauvegarde de secours
 └── workspace/                 <- Répertoire de travail pour le dev & prototypage IA
 ```
 
@@ -145,3 +152,4 @@ Pour exécuter un SOW de bout en bout (développement, tests sandbox, déploieme
 - `StatementOfWork/SOW_BUOY_PHYSICS.md` : Flottaison physique multi-points, gradients de houle $dz/dx$, tangage & roulis.
 - `StatementOfWork/SOW_BUOY_RED_YELLOW_STRIPES.md` : Shading procédural GLSL à 8 secteurs alternés rouge/jaune SOLAS.
 - `StatementOfWork/SOW_SHARK_NAVIGATION.md` : Patrouille d'ailerons de requins réalistes (0.85m), zone d'exclusion ($3.5\text{m}$), contrôles UI et Motion design d'arrivée/départ.
+- `StatementOfWork/SOW_SEAGULL_FLOCK.md` : Volée de mouettes marines en formation Boids, altitude $Y \in [4.5\text{m}, 9.0\text{m}]$, contrôles UI et Motion design d'arrivée/dispersion.
